@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension  point="org.eclipse.jdt.core.compilationParticipant"
+         id="fantasticchainsaw"
+         name="Fantastic Chainsaw">
+         <compilationParticipant
+         	class="leviathan143.fantasticchainsaw.sentinelhelper.SentinelHelperCompilationParticipant"
+         	id="SentinelHelper"
+         	createsProblems="true">
+         </compilationParticipant>
+   </extension>
+</plugin>
