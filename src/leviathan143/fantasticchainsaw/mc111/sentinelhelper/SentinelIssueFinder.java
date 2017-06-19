@@ -1,6 +1,7 @@
 package leviathan143.fantasticchainsaw.mc111.sentinelhelper;
 
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,10 +23,12 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
 import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -42,6 +45,8 @@ public class SentinelIssueFinder extends AbstractHandler
 	{
 		IJavaProject project = JavaCore.create(EclipseHelper.getCurrentSelectedProject());
 		TypeFetcher.fetchTypes(project);
+		
+		test(project);
 
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		try
@@ -82,6 +87,26 @@ public class SentinelIssueFinder extends AbstractHandler
 		}
 		return null;
 	}
+	
+	private void test(IJavaProject project)
+	{
+		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		parser.setProject(project);
+		parser.setSource("net.minecraft.item.ItemStack.EMPTY".toCharArray());
+		parser.setKind(ASTParser.K_EXPRESSION);
+		Expression expression = (Expression) parser.createAST(null);
+		System.out.println(expression);
+		if(expression instanceof QualifiedName)
+		{
+			QualifiedName qualName = (QualifiedName) expression;
+			System.out.println(qualName.getQualifier());
+			System.out.println(qualName.getName());
+
+			QualifiedName qualName2 = (QualifiedName) qualName.getQualifier();
+			System.out.println(qualName2.getQualifier());
+			System.out.println(qualName2.getName());
+		}
+	}
 
 	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
 	{
@@ -121,7 +146,8 @@ public class SentinelIssueFinder extends AbstractHandler
 		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
 
 		@Override
-		public boolean visit(VariableDeclarationFragment node) {
+		public boolean visit(VariableDeclarationFragment node) 
+		{
 			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
 			{
 				matchingNodes.add(node.getName());
@@ -136,8 +162,7 @@ public class SentinelIssueFinder extends AbstractHandler
 			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
 			{
 				matchingNodes.add(node.getLeftHandSide());
-			}
-			
+			}	
 			return false;
 		}
 	}

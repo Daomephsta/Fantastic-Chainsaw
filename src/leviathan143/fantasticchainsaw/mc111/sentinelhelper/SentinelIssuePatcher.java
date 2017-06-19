@@ -16,18 +16,22 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
+import leviathan143.fantasticchainsaw.util.ASTHelper;
 import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
 
@@ -60,6 +64,9 @@ public class SentinelIssuePatcher extends AbstractHandler
 					
 					ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
 					compUnit.accept(stackNullCheckPatcher);
+					
+					ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
+					compUnit.accept(nullAssignmentPatcher);
 					
 					TextEdit edits = rewriter.rewriteAST(doc, null);
 					edits.apply(doc);
@@ -138,6 +145,44 @@ public class SentinelIssuePatcher extends AbstractHandler
 			{
 				rewriter.replace(node, isEmptyInvocation, null);
 			}
+		}
+	}
+	
+	public static class ItemStackNullAssignmentPatcher extends ASTVisitor
+	{
+		private ASTRewrite rewriter;
+		
+		public ItemStackNullAssignmentPatcher(ASTRewrite rewriter) 
+		{
+			this.rewriter = rewriter;
+		}
+
+		@Override
+		public boolean visit(VariableDeclarationFragment node) 
+		{
+			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
+			{
+				patch(node.getAST(), rewriter, node.getInitializer());
+			}
+			return false;
+		}
+		
+		@Override
+		public boolean visit(Assignment node)
+		{
+			if(node.getOperator() != Assignment.Operator.ASSIGN) return false;
+			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
+			{
+				patch(node.getAST(), rewriter, node.getRightHandSide());
+			}	
+			return false;
+		}
+
+		private void patch(AST ast, ASTRewrite rewriter, Expression nullLiteral) 
+		{
+			QualifiedName itemstackQualName = ast.newQualifiedName(ast.newName("net.minecraft.item"), ast.newSimpleName("ItemStack"));
+			QualifiedName emptyStack = ast.newQualifiedName(itemstackQualName, ast.newSimpleName("EMPTY"));
+			rewriter.replace(nullLiteral, emptyStack, null);
 		}
 	}
 }
