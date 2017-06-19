@@ -1,13 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension  point="org.eclipse.jdt.core.compilationParticipant"
-         id="fantasticchainsaw"
-         name="Fantastic Chainsaw">
-         <compilationParticipant
-         	class="leviathan143.fantasticchainsaw.sentinelhelper.SentinelHelperCompilationParticipant"
-         	id="SentinelHelper"
-         	createsProblems="true">
-         </compilationParticipant>
-   </extension>
+	<!--Commands-->
+	<extension point="org.eclipse.ui.commands">
+		<command
+			id="leviathan143.fantasticchainsaw.mc111.findSentinelIssues"
+			name="Find Sentinel Issues"
+			defaultHandler="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelIssueFinder">
+		</command>
+		<command
+			id="leviathan143.fantasticchainsaw.mc111.patchSentinelIssues"
+			name="Fix Sentinel Issues"
+			defaultHandler="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelIssuePatcher">
+		</command>
+	</extension>
+   	<!--Menu options-->
+	<extension point="org.eclipse.ui.menus">
+   		<menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer?after=additions">
+   			<menu label="Fantastic Chainsaw">
+   				<menu label="1.11">
+   					<command
+   						commandId="leviathan143.fantasticchainsaw.mc111.findSentinelIssues"
+   						label="Find Sentinel Issues">
+   					</command>
+   					<command
+   						commandId="leviathan143.fantasticchainsaw.mc111.patchSentinelIssues"
+   						label="Fix Sentinel Issues">
+   					</command>
+   				</menu>
+   			</menu>
+   		</menuContribution>
+   	</extension>
 </plugin>

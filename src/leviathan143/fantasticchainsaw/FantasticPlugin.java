@@ -5,6 +5,8 @@ import org.osgi.framework.BundleContext;
 
 public class FantasticPlugin extends Plugin
 {	
+	public static final String NAME = "fantasticchainsaw";
+	
 	@Override
 	public void start(BundleContext context) throws Exception
 	{
