@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 
 import leviathan143.fantasticchainsaw.mc111.sentinelhelper.TypeFetcher;
 
@@ -13,7 +14,9 @@ public class ASTHelper
 	public static boolean hasNullableAnnotation(Expression expression)
 	{
 		IBinding typeBinding = expression.resolveTypeBinding();
+		
 		if(expression instanceof MethodInvocation) typeBinding = ((MethodInvocation) expression).resolveMethodBinding();
+		else if(expression instanceof Name) typeBinding = ((Name)expression).resolveBinding();
 		for(IAnnotationBinding annotationBinding : typeBinding.getAnnotations())
 		{
 			if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) return true;
