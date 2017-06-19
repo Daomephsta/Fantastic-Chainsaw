@@ -7,8 +7,8 @@ import org.eclipse.jdt.core.JavaModelException;
 public class TypeFetcher
 {
 	static boolean typesFetched;
-	static IType ITEMSTACK_TYPE = null;
-	static IType NULLABLE_ANNOTATION_TYPE = null;
+	public static IType ITEMSTACK_TYPE = null;
+	public static IType NULLABLE_ANNOTATION_TYPE = null;
 
 	public static void fetchTypes(IJavaProject project)
 	{

@@ -3,10 +3,14 @@ package leviathan143.fantasticchainsaw.util;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+
+import leviathan143.fantasticchainsaw.mc111.sentinelhelper.TypeFetcher;
 
 public class TypeHelper 
 {

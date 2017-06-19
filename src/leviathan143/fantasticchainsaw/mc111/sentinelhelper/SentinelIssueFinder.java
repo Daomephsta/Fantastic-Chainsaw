@@ -22,14 +22,15 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+import leviathan143.fantasticchainsaw.util.ASTHelper;
 import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.MarkerHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
@@ -61,6 +62,13 @@ public class SentinelIssueFinder extends AbstractHandler
 					for(ASTNode node : stackNullCheckFinder.matchingNodes)
 					{
 						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack. Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+					}
+					
+					ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
+					compUnit.accept(stackNullAssignmentFinder);
+					for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
+					{
+						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
 					}
 				}
 			}
@@ -95,27 +103,16 @@ public class SentinelIssueFinder extends AbstractHandler
 			{
 				Expression left = node.getLeftOperand();
 				Expression right = node.getRightOperand();
-				if(left instanceof NullLiteral && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation(right))
+				if(left instanceof NullLiteral && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(right))
 				{
 					matchingNodes.add(node);
 				}
-				else if(right instanceof NullLiteral && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation(left))
+				else if(right instanceof NullLiteral && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(left))
 				{
 					matchingNodes.add(node);
 				}
 			}
 			return node.getOperator() == Operator.CONDITIONAL_AND || node.getOperator() == Operator.CONDITIONAL_OR;
-		}
-		
-		private boolean hasNullableAnnotation(Expression expression)
-		{
-			IBinding typeBinding = expression.resolveTypeBinding();
-			if(expression instanceof MethodInvocation) typeBinding = ((MethodInvocation) expression).resolveMethodBinding();
-			for(IAnnotationBinding annotationBinding : typeBinding.getAnnotations())
-			{
-				if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) return true;
-			}
-			return false;
 		}
 	}
 	
@@ -124,9 +121,28 @@ public class SentinelIssueFinder extends AbstractHandler
 		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
 
 		@Override
+		public boolean visit(VariableDeclarationFragment node) {
+			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
+			{
+				matchingNodes.add(node);
+			}
+			return false;
+		}
+		
+		@Override
 		public boolean visit(Assignment node)
 		{
 			if(node.getOperator() != Assignment.Operator.ASSIGN) return false;
+			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
+			{
+				matchingNodes.add(node);
+			}
+			
+			return false;
+		}
+		
+		private boolean checkFragment(VariableDeclarationFragment fragment)
+		{
 			return false;
 		}
 	}
