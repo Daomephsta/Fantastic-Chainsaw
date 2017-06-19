@@ -61,7 +61,7 @@ public class SentinelIssueFinder extends AbstractHandler
 					compUnit.accept(stackNullCheckFinder);
 					for(ASTNode node : stackNullCheckFinder.matchingNodes)
 					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack. Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
 					}
 					
 					ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
@@ -105,11 +105,11 @@ public class SentinelIssueFinder extends AbstractHandler
 				Expression right = node.getRightOperand();
 				if(left instanceof NullLiteral && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(right))
 				{
-					matchingNodes.add(node);
+					matchingNodes.add(right);
 				}
 				else if(right instanceof NullLiteral && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(left))
 				{
-					matchingNodes.add(node);
+					matchingNodes.add(left);
 				}
 			}
 			return node.getOperator() == Operator.CONDITIONAL_AND || node.getOperator() == Operator.CONDITIONAL_OR;
@@ -124,7 +124,7 @@ public class SentinelIssueFinder extends AbstractHandler
 		public boolean visit(VariableDeclarationFragment node) {
 			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
 			{
-				matchingNodes.add(node);
+				matchingNodes.add(node.getName());
 			}
 			return false;
 		}
@@ -135,14 +135,9 @@ public class SentinelIssueFinder extends AbstractHandler
 			if(node.getOperator() != Assignment.Operator.ASSIGN) return false;
 			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
 			{
-				matchingNodes.add(node);
+				matchingNodes.add(node.getLeftHandSide());
 			}
 			
-			return false;
-		}
-		
-		private boolean checkFragment(VariableDeclarationFragment fragment)
-		{
 			return false;
 		}
 	}
