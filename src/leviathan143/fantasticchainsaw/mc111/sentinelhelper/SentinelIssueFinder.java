@@ -111,13 +111,8 @@ public class SentinelIssueFinder extends AbstractHandler
 		{
 			IBinding typeBinding = expression.resolveTypeBinding();
 			if(expression instanceof MethodInvocation) typeBinding = ((MethodInvocation) expression).resolveMethodBinding();
-			System.out.println();
-			System.out.println(expression);
-			System.out.println(expression.getClass());
-			System.out.println("Annotations: " + typeBinding.getAnnotations().length);
 			for(IAnnotationBinding annotationBinding : typeBinding.getAnnotations())
 			{
-				System.out.println(annotationBinding);
 				if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) return true;
 			}
 			return false;
