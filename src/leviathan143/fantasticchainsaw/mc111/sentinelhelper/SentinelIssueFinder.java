@@ -90,22 +90,10 @@ public class SentinelIssueFinder extends AbstractHandler
 	
 	private void test(IJavaProject project)
 	{
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		/*ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setProject(project);
 		parser.setSource("net.minecraft.item.ItemStack.EMPTY".toCharArray());
-		parser.setKind(ASTParser.K_EXPRESSION);
-		Expression expression = (Expression) parser.createAST(null);
-		System.out.println(expression);
-		if(expression instanceof QualifiedName)
-		{
-			QualifiedName qualName = (QualifiedName) expression;
-			System.out.println(qualName.getQualifier());
-			System.out.println(qualName.getName());
-
-			QualifiedName qualName2 = (QualifiedName) qualName.getQualifier();
-			System.out.println(qualName2.getQualifier());
-			System.out.println(qualName2.getName());
-		}
+		parser.setKind(ASTParser.K_EXPRESSION);*/
 	}
 
 	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
