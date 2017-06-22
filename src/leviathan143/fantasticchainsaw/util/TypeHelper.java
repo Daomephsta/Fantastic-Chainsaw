@@ -1,36 +1,32 @@
 package leviathan143.fantasticchainsaw.util;
 
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
-
-import leviathan143.fantasticchainsaw.mc111.sentinelhelper.TypeFetcher;
 
 public class TypeHelper 
 {
-	public static boolean isOfType(Expression expression, IType typeIn)
+	public static boolean isOfType(ASTNode node, IType typeIn)
 	{
-		if(expression instanceof Name || expression instanceof ArrayAccess)
-		{
-			ITypeBinding typeBinding = expression.resolveTypeBinding();
-			
-			if(typeBinding.isArray())
+		IBinding binding = ASTHelper.getTypeBinding(node);
+		return isOfType(binding, typeIn);
+	}
+	
+	public static boolean isOfType(IBinding binding, IType typeIn)
+	{
+		if(binding instanceof ITypeBinding)
+		{	
+			if(((ITypeBinding) binding).isArray())
 			{
 				return false;
 			}
-			return typeBinding.getJavaElement().equals(typeIn);
+			return binding.getJavaElement().equals(typeIn);
 		}
-		else if(expression instanceof MethodInvocation)
+		else if(binding instanceof IMethodBinding)
 		{
-			MethodInvocation methodInvocation = (MethodInvocation) expression;
-			IMethodBinding typeBinding = methodInvocation.resolveMethodBinding();
-			ITypeBinding returnTypeBinding = typeBinding.getReturnType();
+			ITypeBinding returnTypeBinding = ((IMethodBinding) binding).getReturnType();
 			if(returnTypeBinding.isArray()) 
 			{
 				return false;

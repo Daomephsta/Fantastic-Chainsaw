@@ -1,8 +1,11 @@
 package leviathan143.fantasticchainsaw.mc111.sentinelhelper;
 
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -12,6 +15,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -22,9 +26,15 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import leviathan143.fantasticchainsaw.util.ASTHelper;
@@ -68,6 +78,20 @@ public class SentinelIssueFinder extends AbstractHandler
 					for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
 					{
 						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+					}
+					
+					ItemStackNullReturnFinder nullReturnFinder = new ItemStackNullReturnFinder();
+					compUnit.accept(nullReturnFinder);
+					for(ASTNode node : nullReturnFinder.matchingNodes)
+					{
+						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+					}
+					
+					ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
+					compUnit.accept(nullParameterFinder);
+					for(Entry<ASTNode, String> nodeNodeNamePair : nullParameterFinder.matchingNodes)
+					{
+						MarkerHelper.createNormalWarning(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
 					}
 				}
 			}
@@ -145,6 +169,69 @@ public class SentinelIssueFinder extends AbstractHandler
 			{
 				matchingNodes.add(node.getLeftHandSide());
 			}	
+			return false;
+		}
+	}
+	
+	public static class ItemStackNullReturnFinder extends ASTVisitor
+	{
+		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
+		
+		@Override
+		public boolean visit(ReturnStatement node) 
+		{
+			if(node.getExpression() instanceof NullLiteral)
+			{
+				MethodDeclaration parentMethod = (MethodDeclaration) ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION);
+				if(TypeHelper.isOfType(parentMethod, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(parentMethod))
+				{
+					matchingNodes.add(node);
+				}
+			}
+			return false;
+		}
+	}	
+	
+	public static class ItemStackNullParameterFinder extends ASTVisitor
+	{
+		List<Map.Entry<ASTNode, String>> matchingNodes = new ArrayList<Map.Entry<ASTNode, String>>();
+		
+		@Override
+		public boolean visit(MethodInvocation node) 
+		{
+			ITypeBinding[] paramTypes = node.resolveMethodBinding().getParameterTypes();
+			//Get an IMethod from the IMethodBinding
+			IMethodBinding declarationBinding = node.resolveMethodBinding().getMethodDeclaration();
+			//Use the IMethod to get the parameter names
+			try 
+			{ 
+				String[] paramNames = ((IMethod) declarationBinding.getJavaElement()).getParameterNames();
+
+				for(int argIndex = 0; argIndex < node.arguments().size(); argIndex++)
+				{
+					Expression arg = (Expression) node.arguments().get(argIndex);
+
+					if(arg instanceof NullLiteral)
+					{	
+						ITypeBinding paramType = paramTypes[argIndex];
+						boolean hasNullableAnnotation = false;
+						for(IAnnotationBinding annotationBinding : declarationBinding.getParameterAnnotations(argIndex))
+						{
+							if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) hasNullableAnnotation = true;
+						}
+						
+						if(TypeHelper.isOfType(paramType, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation)
+						{
+							//Finally, use the index of the arg to retrieve the parameter name
+							matchingNodes.add(new AbstractMap.SimpleEntry<ASTNode, String>(node, paramNames[argIndex]));
+						}
+					}
+				} 
+			} 
+			catch (JavaModelException e) 
+			{
+				e.printStackTrace();
+			}
 			return false;
 		}
 	}
