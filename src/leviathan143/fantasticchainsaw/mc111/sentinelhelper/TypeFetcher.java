@@ -4,6 +4,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
+import leviathan143.fantasticchainsaw.util.TypeHelper;
+
 public class TypeFetcher
 {
 	static boolean typesFetched;
@@ -17,7 +19,7 @@ public class TypeFetcher
 		long startTime = System.currentTimeMillis();
 		try
 		{
-			ITEMSTACK_TYPE = project.findType("net.minecraft.item.ItemStack");
+			ITEMSTACK_TYPE = project.findType(TypeHelper.ITEMSTACK_NAME);
 			NULLABLE_ANNOTATION_TYPE = project.findType("javax.annotation.Nullable");
 			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
 		} 

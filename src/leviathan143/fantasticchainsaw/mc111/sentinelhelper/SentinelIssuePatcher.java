@@ -23,15 +23,18 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -42,7 +45,7 @@ import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
 
 public class SentinelIssuePatcher extends AbstractHandler
-{
+{	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException
 	{
@@ -81,6 +84,15 @@ public class SentinelIssuePatcher extends AbstractHandler
 					
 					ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
 					compUnit.accept(nullParameterPatcher);
+					
+					if(!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists() && (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
+					{
+						AST ast = compUnit.getAST();
+						ListRewrite imports = rewriter.getListRewrite(compUnit, CompilationUnit.IMPORTS_PROPERTY);
+						ImportDeclaration itemstackImport = ast.newImportDeclaration();
+						itemstackImport.setName(ast.newName(TypeHelper.ITEMSTACK_NAME));
+						imports.insertLast(itemstackImport, null);
+					}
 					
 					TextEdit edits = rewriter.rewriteAST(doc, null);
 					edits.apply(doc);
@@ -165,14 +177,14 @@ public class SentinelIssuePatcher extends AbstractHandler
 	
 	private static void replaceNullWithEmptyStack(AST ast, ASTRewrite rewriter, Expression nullLiteral) 
 	{
-		QualifiedName itemstackQualName = ast.newQualifiedName(ast.newName("net.minecraft.item"), ast.newSimpleName("ItemStack"));
-		QualifiedName emptyStack = ast.newQualifiedName(itemstackQualName, ast.newSimpleName("EMPTY"));
+		Name emptyStack = ast.newName("ItemStack.EMPTY");
 		rewriter.replace(nullLiteral, emptyStack, null);
 	}
 	
 	public static class ItemStackNullAssignmentPatcher extends ASTVisitor
 	{
 		private ASTRewrite rewriter;
+		public boolean workDone;
 		
 		public ItemStackNullAssignmentPatcher(ASTRewrite rewriter) 
 		{
@@ -184,6 +196,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 		{
 			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
 			{
+				workDone = true;
 				replaceNullWithEmptyStack(node.getAST(), rewriter, node.getInitializer());
 			}
 			return false;
@@ -195,6 +208,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 			if(node.getOperator() != Assignment.Operator.ASSIGN) return false;
 			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
 			{
+				workDone = true;
 				replaceNullWithEmptyStack(node.getAST(), rewriter, node.getRightHandSide());
 			}	
 			return false;
@@ -204,6 +218,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 	public static class ItemStackNullReturnPatcher extends ASTVisitor
 	{	
 		private ASTRewrite rewriter;
+		public boolean workDone;
 		
 		public ItemStackNullReturnPatcher(ASTRewrite rewriter) 
 		{
@@ -217,7 +232,10 @@ public class SentinelIssuePatcher extends AbstractHandler
 			{
 				MethodDeclaration parentMethod = (MethodDeclaration) ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION);
 				if(TypeHelper.isOfType(parentMethod, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(parentMethod))
+				{
+					workDone = true;
 					replaceNullWithEmptyStack(node.getAST(), rewriter, node.getExpression());
+				}
 			}
 			return false;
 		}
@@ -226,6 +244,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 	public static class ItemStackNullParameterPatcher extends ASTVisitor
 	{
 		private ASTRewrite rewriter;
+		public boolean workDone;
 		
 		public ItemStackNullParameterPatcher(ASTRewrite rewriter) 
 		{
@@ -253,7 +272,10 @@ public class SentinelIssuePatcher extends AbstractHandler
 						if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) hasNullableAnnotation = true;
 					}
 					if(TypeHelper.isOfType(paramType, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation)
+					{
+						workDone = true;
 						replaceNullWithEmptyStack(node.getAST(), rewriter, arg);
+					}
 				}
 			} 
 			return false;

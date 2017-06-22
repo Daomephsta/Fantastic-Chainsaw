@@ -8,6 +8,8 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 
 public class TypeHelper 
 {
+	public static String ITEMSTACK_NAME = "net.minecraft.item.ItemStack";
+	
 	public static boolean isOfType(ASTNode node, IType typeIn)
 	{
 		IBinding binding = ASTHelper.getTypeBinding(node);
