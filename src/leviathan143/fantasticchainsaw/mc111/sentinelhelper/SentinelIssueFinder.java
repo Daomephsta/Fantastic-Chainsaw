@@ -56,6 +56,7 @@ public class SentinelIssueFinder extends AbstractHandler
 		try
 		{
 			System.out.println("Finding sentinel issues");
+			long startTime = System.currentTimeMillis();
 			for(IPackageFragment fragment : project.getPackageFragments())
 			{
 				for(ICompilationUnit comp : fragment.getCompilationUnits())
@@ -95,7 +96,7 @@ public class SentinelIssueFinder extends AbstractHandler
 					}
 				}
 			}
-			System.out.println("Done");
+			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
 		} catch (JavaModelException e)
 		{
 			e.printStackTrace();

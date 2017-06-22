@@ -52,6 +52,8 @@ public class SentinelIssuePatcher extends AbstractHandler
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		try
 		{
+			System.out.println("Fixing sentinel issues");
+			long startTime = System.currentTimeMillis();
 			for(IPackageFragment fragment : project.getPackageFragments())
 			{
 				for(ICompilationUnit comp : fragment.getCompilationUnits())
@@ -88,6 +90,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 					bufferManager.disconnect(filePath, LocationKind.IFILE, null);
 				}
 			}
+			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
 		} catch (CoreException | MalformedTreeException | BadLocationException e)
 		{
 			e.printStackTrace();
