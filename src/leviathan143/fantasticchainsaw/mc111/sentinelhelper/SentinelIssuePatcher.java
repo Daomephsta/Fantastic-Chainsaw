@@ -122,12 +122,12 @@ public class SentinelIssuePatcher extends AbstractHandler
 				Expression right = node.getRightOperand();
 				try 
 				{
-					if(left instanceof NullLiteral && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE))
+					if(left instanceof NullLiteral && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(right))
 					{
 						itemstackExpression = right;
 						patch(node.getAST(), rewriter, node);
 					}
-					else if (right instanceof NullLiteral && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE))
+					else if(right instanceof NullLiteral && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(left))
 					{
 						itemstackExpression = left;
 						patch(node.getAST(), rewriter, node);
