@@ -14,11 +14,12 @@ public class TypeFetcher
 	{
 		if(typesFetched) return;
 		System.out.println("Fetching types");
+		long startTime = System.currentTimeMillis();
 		try
 		{
 			ITEMSTACK_TYPE = project.findType("net.minecraft.item.ItemStack");
 			NULLABLE_ANNOTATION_TYPE = project.findType("javax.annotation.Nullable");
-			System.out.println("Done");
+			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
 		} 
 		catch (JavaModelException e)
 		{
