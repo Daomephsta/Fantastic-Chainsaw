@@ -84,7 +84,7 @@ public class SentinelIssueFinder extends AbstractHandler
 					compUnit.accept(nullReturnFinder);
 					for(ASTNode node : nullReturnFinder.matchingNodes)
 					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION).getStructuralProperty(MethodDeclaration.NAME_PROPERTY)), compUnit.getLineNumber(node.getStartPosition()));
 					}
 					
 					ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
