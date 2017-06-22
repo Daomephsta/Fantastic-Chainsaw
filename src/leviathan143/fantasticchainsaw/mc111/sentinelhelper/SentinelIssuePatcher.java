@@ -14,16 +14,22 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
@@ -67,6 +73,12 @@ public class SentinelIssuePatcher extends AbstractHandler
 					
 					ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
 					compUnit.accept(nullAssignmentPatcher);
+					
+					ItemStackNullReturnPatcher nullReturnPatcher = new ItemStackNullReturnPatcher(rewriter);
+					compUnit.accept(nullReturnPatcher);
+					
+					ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
+					compUnit.accept(nullParameterPatcher);
 					
 					TextEdit edits = rewriter.rewriteAST(doc, null);
 					edits.apply(doc);
@@ -148,6 +160,13 @@ public class SentinelIssuePatcher extends AbstractHandler
 		}
 	}
 	
+	private static void replaceNullWithEmptyStack(AST ast, ASTRewrite rewriter, Expression nullLiteral) 
+	{
+		QualifiedName itemstackQualName = ast.newQualifiedName(ast.newName("net.minecraft.item"), ast.newSimpleName("ItemStack"));
+		QualifiedName emptyStack = ast.newQualifiedName(itemstackQualName, ast.newSimpleName("EMPTY"));
+		rewriter.replace(nullLiteral, emptyStack, null);
+	}
+	
 	public static class ItemStackNullAssignmentPatcher extends ASTVisitor
 	{
 		private ASTRewrite rewriter;
@@ -162,7 +181,7 @@ public class SentinelIssuePatcher extends AbstractHandler
 		{
 			if(node.getInitializer() instanceof NullLiteral && TypeHelper.isOfType(node.getName(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getName()))
 			{
-				patch(node.getAST(), rewriter, node.getInitializer());
+				replaceNullWithEmptyStack(node.getAST(), rewriter, node.getInitializer());
 			}
 			return false;
 		}
@@ -173,16 +192,68 @@ public class SentinelIssuePatcher extends AbstractHandler
 			if(node.getOperator() != Assignment.Operator.ASSIGN) return false;
 			if(node.getRightHandSide() instanceof NullLiteral && TypeHelper.isOfType(node.getLeftHandSide(), TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(node.getLeftHandSide()))
 			{
-				patch(node.getAST(), rewriter, node.getRightHandSide());
+				replaceNullWithEmptyStack(node.getAST(), rewriter, node.getRightHandSide());
 			}	
 			return false;
 		}
-
-		private void patch(AST ast, ASTRewrite rewriter, Expression nullLiteral) 
+	}
+	
+	public static class ItemStackNullReturnPatcher extends ASTVisitor
+	{	
+		private ASTRewrite rewriter;
+		
+		public ItemStackNullReturnPatcher(ASTRewrite rewriter) 
 		{
-			QualifiedName itemstackQualName = ast.newQualifiedName(ast.newName("net.minecraft.item"), ast.newSimpleName("ItemStack"));
-			QualifiedName emptyStack = ast.newQualifiedName(itemstackQualName, ast.newSimpleName("EMPTY"));
-			rewriter.replace(nullLiteral, emptyStack, null);
+			this.rewriter = rewriter;
+		}
+		
+		@Override
+		public boolean visit(ReturnStatement node) 
+		{
+			if(node.getExpression() instanceof NullLiteral)
+			{
+				MethodDeclaration parentMethod = (MethodDeclaration) ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION);
+				if(TypeHelper.isOfType(parentMethod, TypeFetcher.ITEMSTACK_TYPE) && !ASTHelper.hasNullableAnnotation(parentMethod))
+					replaceNullWithEmptyStack(node.getAST(), rewriter, node.getExpression());
+			}
+			return false;
+		}
+	}	
+	
+	public static class ItemStackNullParameterPatcher extends ASTVisitor
+	{
+		private ASTRewrite rewriter;
+		
+		public ItemStackNullParameterPatcher(ASTRewrite rewriter) 
+		{
+			this.rewriter = rewriter;
+		}
+		
+		@Override
+		public boolean visit(MethodInvocation node) 
+		{
+			ITypeBinding[] paramTypes = node.resolveMethodBinding().getParameterTypes();
+			//Get an IMethod from the IMethodBinding
+			IMethodBinding declarationBinding = node.resolveMethodBinding().getMethodDeclaration();
+			//Use the IMethod to get the parameter names
+
+			for(int argIndex = 0; argIndex < node.arguments().size(); argIndex++)
+			{
+				Expression arg = (Expression) node.arguments().get(argIndex);
+				
+				if(arg instanceof NullLiteral)
+				{	
+					ITypeBinding paramType = paramTypes[argIndex];
+					boolean hasNullableAnnotation = false;
+					for(IAnnotationBinding annotationBinding : declarationBinding.getParameterAnnotations(argIndex))
+					{
+						if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) hasNullableAnnotation = true;
+					}
+					if(TypeHelper.isOfType(paramType, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation)
+						replaceNullWithEmptyStack(node.getAST(), rewriter, arg);
+				}
+			} 
+			return false;
 		}
 	}
 }
