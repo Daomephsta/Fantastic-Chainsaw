@@ -7,18 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -35,82 +29,49 @@ import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import leviathan143.fantasticchainsaw.util.ASTHelper;
-import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.MarkerHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
 
-public class SentinelIssueFinder extends AbstractHandler
+public class SentinelIssueFinder extends SentinelIssueTool
 {
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException
+	public SentinelIssueFinder() 
 	{
-		IJavaProject currentProject = null;
-		
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		try
-		{
-			System.out.println("Finding sentinel issues");
-			long startTime = System.currentTimeMillis();
-			for(ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
-			{
-				if(!comp.isStructureKnown()) System.err.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
-				if(currentProject != comp.getJavaProject())
-				{
-					System.out.println("Project has changed, refetching types.");
-					currentProject = comp.getJavaProject();
-					TypeFetcher.fetchTypes(currentProject);
-				}
-				setupASTParser(parser, currentProject, comp);
-				CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
-				IResource baseResource = comp.getResource();
-
-				baseResource.deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
-
-				ItemStackNullCheckFinder stackNullCheckFinder = new ItemStackNullCheckFinder();
-				compUnit.accept(stackNullCheckFinder);
-				for(ASTNode node : stackNullCheckFinder.matchingNodes)
-				{
-					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
-				}
-
-				ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
-				compUnit.accept(stackNullAssignmentFinder);
-				for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
-				{
-					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
-				}
-
-				ItemStackNullReturnFinder nullReturnFinder = new ItemStackNullReturnFinder();
-				compUnit.accept(nullReturnFinder);
-				for(ASTNode node : nullReturnFinder.matchingNodes)
-				{
-					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION).getStructuralProperty(MethodDeclaration.NAME_PROPERTY)), compUnit.getLineNumber(node.getStartPosition()));
-				}
-
-				ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
-				compUnit.accept(nullParameterFinder);
-				for(Entry<ASTNode, String> nodeNodeNamePair : nullParameterFinder.matchingNodes)
-				{
-					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
-				}
-			}
-			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
-		} catch (JavaModelException e)
-		{
-			e.printStackTrace();
-		} catch (CoreException e)
-		{
-			e.printStackTrace();
-		}
-		return null;
+		super("Find sentinel issues");
 	}
 
-	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
+	@Override
+	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
 	{
-		parser.setProject(project);
-		parser.setSource(comp);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setResolveBindings(true);
+		IResource baseResource = comp.getResource();
+		baseResource.deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
+
+		ItemStackNullCheckFinder stackNullCheckFinder = new ItemStackNullCheckFinder();
+		compUnit.accept(stackNullCheckFinder);
+		for(ASTNode node : stackNullCheckFinder.matchingNodes)
+		{
+			MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+		}
+
+		ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
+		compUnit.accept(stackNullAssignmentFinder);
+		for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
+		{
+			MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+		}
+
+		ItemStackNullReturnFinder nullReturnFinder = new ItemStackNullReturnFinder();
+		compUnit.accept(nullReturnFinder);
+		for(ASTNode node : nullReturnFinder.matchingNodes)
+		{
+			MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION).getStructuralProperty(MethodDeclaration.NAME_PROPERTY)), compUnit.getLineNumber(node.getStartPosition()));
+		}
+
+		ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
+		compUnit.accept(nullParameterFinder);
+		for(Entry<ASTNode, String> nodeNodeNamePair : nullParameterFinder.matchingNodes)
+		{
+			MarkerHelper.createSentinelIssueMarker(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
+		}
 	}
 
 
@@ -137,7 +98,7 @@ public class SentinelIssueFinder extends AbstractHandler
 			return node.getOperator() == Operator.CONDITIONAL_AND || node.getOperator() == Operator.CONDITIONAL_OR;
 		}
 	}
-	
+
 	public static class ItemStackNullAssignmentFinder extends ASTVisitor
 	{
 		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
@@ -151,7 +112,7 @@ public class SentinelIssueFinder extends AbstractHandler
 			}
 			return false;
 		}
-		
+
 		@Override
 		public boolean visit(Assignment node)
 		{
@@ -163,11 +124,11 @@ public class SentinelIssueFinder extends AbstractHandler
 			return false;
 		}
 	}
-	
+
 	public static class ItemStackNullReturnFinder extends ASTVisitor
 	{
 		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
-		
+
 		@Override
 		public boolean visit(ReturnStatement node) 
 		{
@@ -182,11 +143,11 @@ public class SentinelIssueFinder extends AbstractHandler
 			return false;
 		}
 	}	
-	
+
 	public static class ItemStackNullParameterFinder extends ASTVisitor
 	{
 		List<Map.Entry<ASTNode, String>> matchingNodes = new ArrayList<Map.Entry<ASTNode, String>>();
-		
+
 		@Override
 		public boolean visit(MethodInvocation node) 
 		{
@@ -210,7 +171,7 @@ public class SentinelIssueFinder extends AbstractHandler
 						{
 							if(annotationBinding.getAnnotationType().getJavaElement().equals(TypeFetcher.NULLABLE_ANNOTATION_TYPE)) hasNullableAnnotation = true;
 						}
-						
+
 						if(TypeHelper.isOfType(paramType, TypeFetcher.ITEMSTACK_TYPE) && !hasNullableAnnotation)
 						{
 							//Finally, use the index of the arg to retrieve the parameter name

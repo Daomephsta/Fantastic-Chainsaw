@@ -1,8 +1,5 @@
 package leviathan143.fantasticchainsaw.mc111.sentinelhelper;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
@@ -12,11 +9,8 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -41,86 +35,57 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
 import leviathan143.fantasticchainsaw.util.ASTHelper;
-import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.MarkerHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
 
-public class SentinelIssuePatcher extends AbstractHandler
+public class SentinelIssuePatcher extends SentinelIssueTool
 {	
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException
+	public SentinelIssuePatcher() 
 	{
-		IJavaProject currentProject = null;
-
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		try
-		{
-			System.out.println("Fixing sentinel issues");
-			long startTime = System.currentTimeMillis();
-			for(ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
-			{
-				if(!comp.isStructureKnown()) System.err.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
-				if(currentProject != comp.getJavaProject())
-				{
-					System.out.println("Project has changed, refetching types.");
-					currentProject = comp.getJavaProject();
-					TypeFetcher.fetchTypes(currentProject);
-				}
-				setupASTParser(parser, currentProject, comp);
-				CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
-
-				ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
-				IPath filePath = compUnit.getJavaElement().getPath();
-
-				bufferManager.connect(filePath, LocationKind.IFILE, null);
-				ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
-				IDocument doc = fileBuffer.getDocument();
-
-				ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
-
-				ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
-				compUnit.accept(stackNullCheckPatcher);
-
-				ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
-				compUnit.accept(nullAssignmentPatcher);
-
-				ItemStackNullReturnPatcher nullReturnPatcher = new ItemStackNullReturnPatcher(rewriter);
-				compUnit.accept(nullReturnPatcher);
-
-				ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
-				compUnit.accept(nullParameterPatcher);
-
-				if(!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists() && (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
-				{
-					AST ast = compUnit.getAST();
-					ListRewrite imports = rewriter.getListRewrite(compUnit, CompilationUnit.IMPORTS_PROPERTY);
-					ImportDeclaration itemstackImport = ast.newImportDeclaration();
-					itemstackImport.setName(ast.newName(TypeHelper.ITEMSTACK_NAME));
-					imports.insertLast(itemstackImport, null);
-				}
-
-				TextEdit edits = rewriter.rewriteAST(doc, null);
-				edits.apply(doc);
-
-				fileBuffer.commit(null, true);
-
-				bufferManager.disconnect(filePath, LocationKind.IFILE, null);
-			}
-			ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
-			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
-		} catch (CoreException | MalformedTreeException | BadLocationException e)
-		{
-			e.printStackTrace();
-		}
-		return null;
+		super("Patch sentinel issues");
 	}
-
-	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
+	
+	@Override
+	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException, MalformedTreeException, BadLocationException
 	{
-		parser.setProject(project);
-		parser.setSource(comp);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setResolveBindings(true);
+		ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
+		IPath filePath = compUnit.getJavaElement().getPath();
+
+		bufferManager.connect(filePath, LocationKind.IFILE, null);
+		ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
+		IDocument doc = fileBuffer.getDocument();
+
+		ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
+
+		ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
+		compUnit.accept(stackNullCheckPatcher);
+
+		ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
+		compUnit.accept(nullAssignmentPatcher);
+
+		ItemStackNullReturnPatcher nullReturnPatcher = new ItemStackNullReturnPatcher(rewriter);
+		compUnit.accept(nullReturnPatcher);
+
+		ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
+		compUnit.accept(nullParameterPatcher);
+
+		if(!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists() && (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
+		{
+			AST ast = compUnit.getAST();
+			ListRewrite imports = rewriter.getListRewrite(compUnit, CompilationUnit.IMPORTS_PROPERTY);
+			ImportDeclaration itemstackImport = ast.newImportDeclaration();
+			itemstackImport.setName(ast.newName(TypeHelper.ITEMSTACK_NAME));
+			imports.insertLast(itemstackImport, null);
+		}
+
+		TextEdit edits = rewriter.rewriteAST(doc, null);
+		edits.apply(doc);
+
+		fileBuffer.commit(null, true);
+
+		bufferManager.disconnect(filePath, LocationKind.IFILE, null);
+
+		ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
 	}
 
 	public static class ItemStackNullCheckPatcher extends ASTVisitor
