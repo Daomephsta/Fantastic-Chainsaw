@@ -7,11 +7,12 @@ import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.filebuffers.LocationKind;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -30,7 +31,6 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.PrefixExpression;
-import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -42,6 +42,7 @@ import org.eclipse.text.edits.TextEdit;
 
 import leviathan143.fantasticchainsaw.util.ASTHelper;
 import leviathan143.fantasticchainsaw.util.EclipseHelper;
+import leviathan143.fantasticchainsaw.util.MarkerHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
 
 public class SentinelIssuePatcher extends AbstractHandler
@@ -49,59 +50,63 @@ public class SentinelIssuePatcher extends AbstractHandler
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException
 	{
-		IJavaProject project = JavaCore.create(EclipseHelper.getCurrentSelectedProject());
-		TypeFetcher.fetchTypes(project);
+		IJavaProject currentProject = null;
 
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		try
 		{
 			System.out.println("Fixing sentinel issues");
 			long startTime = System.currentTimeMillis();
-			for(IPackageFragment fragment : project.getPackageFragments())
+			for(ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
 			{
-				for(ICompilationUnit comp : fragment.getCompilationUnits())
+				if(!comp.isStructureKnown()) System.err.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
+				if(currentProject != comp.getJavaProject())
 				{
-					setupASTParser(parser, project, comp);
-					CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
-
-					ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
-					IPath filePath = compUnit.getJavaElement().getPath();
-					
-					bufferManager.connect(filePath, LocationKind.IFILE, null);
-					ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
-					IDocument doc = fileBuffer.getDocument();
-					
-					ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
-					
-					ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
-					compUnit.accept(stackNullCheckPatcher);
-					
-					ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
-					compUnit.accept(nullAssignmentPatcher);
-					
-					ItemStackNullReturnPatcher nullReturnPatcher = new ItemStackNullReturnPatcher(rewriter);
-					compUnit.accept(nullReturnPatcher);
-					
-					ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
-					compUnit.accept(nullParameterPatcher);
-					
-					if(!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists() && (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
-					{
-						AST ast = compUnit.getAST();
-						ListRewrite imports = rewriter.getListRewrite(compUnit, CompilationUnit.IMPORTS_PROPERTY);
-						ImportDeclaration itemstackImport = ast.newImportDeclaration();
-						itemstackImport.setName(ast.newName(TypeHelper.ITEMSTACK_NAME));
-						imports.insertLast(itemstackImport, null);
-					}
-					
-					TextEdit edits = rewriter.rewriteAST(doc, null);
-					edits.apply(doc);
-							
-					fileBuffer.commit(null, true);
-					
-					bufferManager.disconnect(filePath, LocationKind.IFILE, null);
+					System.out.println("Project has changed, refetching types.");
+					currentProject = comp.getJavaProject();
+					TypeFetcher.fetchTypes(currentProject);
 				}
+				setupASTParser(parser, currentProject, comp);
+				CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
+
+				ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
+				IPath filePath = compUnit.getJavaElement().getPath();
+
+				bufferManager.connect(filePath, LocationKind.IFILE, null);
+				ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
+				IDocument doc = fileBuffer.getDocument();
+
+				ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
+
+				ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
+				compUnit.accept(stackNullCheckPatcher);
+
+				ItemStackNullAssignmentPatcher nullAssignmentPatcher = new ItemStackNullAssignmentPatcher(rewriter);
+				compUnit.accept(nullAssignmentPatcher);
+
+				ItemStackNullReturnPatcher nullReturnPatcher = new ItemStackNullReturnPatcher(rewriter);
+				compUnit.accept(nullReturnPatcher);
+
+				ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
+				compUnit.accept(nullParameterPatcher);
+
+				if(!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists() && (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
+				{
+					AST ast = compUnit.getAST();
+					ListRewrite imports = rewriter.getListRewrite(compUnit, CompilationUnit.IMPORTS_PROPERTY);
+					ImportDeclaration itemstackImport = ast.newImportDeclaration();
+					itemstackImport.setName(ast.newName(TypeHelper.ITEMSTACK_NAME));
+					imports.insertLast(itemstackImport, null);
+				}
+
+				TextEdit edits = rewriter.rewriteAST(doc, null);
+				edits.apply(doc);
+
+				fileBuffer.commit(null, true);
+
+				bufferManager.disconnect(filePath, LocationKind.IFILE, null);
 			}
+			ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
 			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
 		} catch (CoreException | MalformedTreeException | BadLocationException e)
 		{

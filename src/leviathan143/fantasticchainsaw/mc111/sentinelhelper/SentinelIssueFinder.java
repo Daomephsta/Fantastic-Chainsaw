@@ -10,14 +10,11 @@ import java.util.Map.Entry;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -47,53 +44,54 @@ public class SentinelIssueFinder extends AbstractHandler
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException
 	{
-		IJavaProject project = JavaCore.create(EclipseHelper.getCurrentSelectedProject());
-		TypeFetcher.fetchTypes(project);
+		IJavaProject currentProject = null;
 		
-		test(project);
-
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		try
 		{
 			System.out.println("Finding sentinel issues");
 			long startTime = System.currentTimeMillis();
-			for(IPackageFragment fragment : project.getPackageFragments())
+			for(ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
 			{
-				for(ICompilationUnit comp : fragment.getCompilationUnits())
+				if(!comp.isStructureKnown()) System.err.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
+				if(currentProject != comp.getJavaProject())
 				{
-					setupASTParser(parser, project, comp);
-					CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
-					IResource baseResource = comp.getResource();
+					System.out.println("Project has changed, refetching types.");
+					currentProject = comp.getJavaProject();
+					TypeFetcher.fetchTypes(currentProject);
+				}
+				setupASTParser(parser, currentProject, comp);
+				CompilationUnit compUnit = (CompilationUnit) parser.createAST(null);
+				IResource baseResource = comp.getResource();
 
-					baseResource.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+				baseResource.deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
 
-					ItemStackNullCheckFinder stackNullCheckFinder = new ItemStackNullCheckFinder();
-					compUnit.accept(stackNullCheckFinder);
-					for(ASTNode node : stackNullCheckFinder.matchingNodes)
-					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
-					}
-					
-					ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
-					compUnit.accept(stackNullAssignmentFinder);
-					for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
-					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
-					}
-					
-					ItemStackNullReturnFinder nullReturnFinder = new ItemStackNullReturnFinder();
-					compUnit.accept(nullReturnFinder);
-					for(ASTNode node : nullReturnFinder.matchingNodes)
-					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION).getStructuralProperty(MethodDeclaration.NAME_PROPERTY)), compUnit.getLineNumber(node.getStartPosition()));
-					}
-					
-					ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
-					compUnit.accept(nullParameterFinder);
-					for(Entry<ASTNode, String> nodeNodeNamePair : nullParameterFinder.matchingNodes)
-					{
-						MarkerHelper.createNormalWarning(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
-					}
+				ItemStackNullCheckFinder stackNullCheckFinder = new ItemStackNullCheckFinder();
+				compUnit.accept(stackNullCheckFinder);
+				for(ASTNode node : stackNullCheckFinder.matchingNodes)
+				{
+					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack#isEmpty() instead of null-checking the returned value.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+				}
+
+				ItemStackNullAssignmentFinder stackNullAssignmentFinder = new ItemStackNullAssignmentFinder();
+				compUnit.accept(stackNullAssignmentFinder);
+				for(ASTNode node : stackNullAssignmentFinder.matchingNodes)
+				{
+					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", node.toString()), compUnit.getLineNumber(node.getStartPosition()));
+				}
+
+				ItemStackNullReturnFinder nullReturnFinder = new ItemStackNullReturnFinder();
+				compUnit.accept(nullReturnFinder);
+				for(ASTNode node : nullReturnFinder.matchingNodes)
+				{
+					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("%1$s is of type ItemStack, which is non-nullable! Return ItemStack.EMPTY instead of null.", ASTHelper.getParentOfType(node, ASTNode.METHOD_DECLARATION).getStructuralProperty(MethodDeclaration.NAME_PROPERTY)), compUnit.getLineNumber(node.getStartPosition()));
+				}
+
+				ItemStackNullParameterFinder nullParameterFinder = new ItemStackNullParameterFinder();
+				compUnit.accept(nullParameterFinder);
+				for(Entry<ASTNode, String> nodeNodeNamePair : nullParameterFinder.matchingNodes)
+				{
+					MarkerHelper.createSentinelIssueMarker(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
 				}
 			}
 			System.out.println("Done in " + (System.currentTimeMillis() - startTime) + " ms");
@@ -105,14 +103,6 @@ public class SentinelIssueFinder extends AbstractHandler
 			e.printStackTrace();
 		}
 		return null;
-	}
-	
-	private void test(IJavaProject project)
-	{
-		/*ASTParser parser = ASTParser.newParser(AST.JLS8);
-		parser.setProject(project);
-		parser.setSource("net.minecraft.item.ItemStack.EMPTY".toCharArray());
-		parser.setKind(ASTParser.K_EXPRESSION);*/
 	}
 
 	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
