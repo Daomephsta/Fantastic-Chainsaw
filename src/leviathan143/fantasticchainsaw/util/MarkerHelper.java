@@ -8,31 +8,18 @@ import leviathan143.fantasticchainsaw.FantasticPlugin;
 
 public class MarkerHelper
 {
-	public static IMarker createNormalError(IResource resource, String message, int line)
+	public static final String SENTINEL_ISSUE = "leviathan143.fantasticchainsaw.mc111.sentinelissuemarker";
+	
+	public static IMarker createSentinelIssueMarker(IResource resource, String message, int line)
 	{
-		return createError(resource, message, line, IMarker.PRIORITY_NORMAL);
+		return createMarker(resource, SENTINEL_ISSUE, message, line, IMarker.SEVERITY_WARNING, IMarker.PRIORITY_NORMAL);
 	}
 	
-	public static IMarker createError(IResource resource, String message, int line, int priority)
-	{
-		return createMarker(resource, message, line, IMarker.SEVERITY_ERROR, priority);
-	}
-	
-	public static IMarker createNormalWarning(IResource resource, String message, int line)
-	{
-		return createWarning(resource, message, line, IMarker.PRIORITY_NORMAL);
-	}
-	
-	public static IMarker createWarning(IResource resource, String message, int line, int priority)
-	{
-		return createMarker(resource, message, line, IMarker.SEVERITY_WARNING, priority);
-	}
-	
-	public static IMarker createMarker(IResource resource, String message, int line, int severity, int priority)
+	public static IMarker createMarker(IResource resource, String id, String message, int line, int severity, int priority)
 	{
 		try
 		{
-			IMarker marker = resource.createMarker(IMarker.PROBLEM);
+			IMarker marker = resource.createMarker(id);
 			if(marker.exists())
 			{
 				marker.setAttribute(IMarker.LINE_NUMBER, line);
