@@ -40,10 +40,9 @@ public class SentinelIssueFinder extends SentinelIssueTool
 	{
 		super("Find sentinel issues");
 	}
-
-	@Override
-	public void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
-	{
+	
+	public static void analyse(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
+	{ 	
 		IResource baseResource = comp.getResource();
 		baseResource.deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
 
@@ -74,6 +73,12 @@ public class SentinelIssueFinder extends SentinelIssueTool
 		{
 			MarkerHelper.createSentinelIssueMarker(baseResource, String.format("Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.", nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
 		}
+	}
+
+	@Override
+	public void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
+	{
+		analyse(compUnit, comp);
 	}
 
 

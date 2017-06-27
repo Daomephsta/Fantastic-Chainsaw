@@ -38,4 +38,11 @@
     <super type="org.eclipse.core.resources.problemmarker"/>
     <super type="leviathan143.fantasticchainsaw.markerbase"/>
  </extension>
+ <extension point="org.eclipse.jdt.core.compilationParticipant">
+ 	<compilationParticipant
+ 		class="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelCompilationParticipant"
+ 		id="SentinelHelper"
+ 		createsProblems="true">
+ 	</compilationParticipant>
+ </extension>
 </plugin>
