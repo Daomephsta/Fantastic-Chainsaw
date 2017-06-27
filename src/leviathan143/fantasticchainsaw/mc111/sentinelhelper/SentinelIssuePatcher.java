@@ -40,6 +40,8 @@ import leviathan143.fantasticchainsaw.util.TypeHelper;
 
 public class SentinelIssuePatcher extends SentinelIssueTool
 {	
+	public static final String NAME = "leviathan143.fantasticchainsaw.mc111.patchSentinelIssues";
+	
 	public SentinelIssuePatcher() 
 	{
 		super("Patch sentinel issues");

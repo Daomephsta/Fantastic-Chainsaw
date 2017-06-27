@@ -34,13 +34,15 @@ import leviathan143.fantasticchainsaw.util.TypeHelper;
 
 public class SentinelIssueFinder extends SentinelIssueTool
 {
+	public static final String NAME = "leviathan143.fantasticchainsaw.mc111.findSentinelIssues";
+	
 	public SentinelIssueFinder() 
 	{
 		super("Find sentinel issues");
 	}
 
 	@Override
-	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
+	public void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
 	{
 		IResource baseResource = comp.getResource();
 		baseResource.deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true, IResource.DEPTH_INFINITE);
