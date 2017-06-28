@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+import leviathan143.fantasticchainsaw.gradle.GradleInterface;
 import leviathan143.fantasticchainsaw.util.ASTHelper;
 import leviathan143.fantasticchainsaw.util.MarkerHelper;
 import leviathan143.fantasticchainsaw.util.TypeHelper;
@@ -78,7 +79,8 @@ public class SentinelIssueFinder extends SentinelIssueTool
 	@Override
 	public void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
 	{
-		analyse(compUnit, comp);
+		new GradleInterface(comp.getJavaProject());
+		//analyse(compUnit, comp);
 	}
 
 
