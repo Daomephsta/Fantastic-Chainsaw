@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+repositories 
+{
+    jcenter()
+    maven 
+	{
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+	}
+}
+
+
+dependencies 
+{
+	compile gradleApi()
+	compile 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+    //testCompile 'junit:junit:4.12'S
+}
