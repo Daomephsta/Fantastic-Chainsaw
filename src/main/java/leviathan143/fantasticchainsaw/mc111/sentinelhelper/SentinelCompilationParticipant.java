@@ -3,20 +3,21 @@ package leviathan143.fantasticchainsaw.mc111.sentinelhelper;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.core.compiler.ReconcileContext;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import leviathan143.fantasticchainsaw.base.VersionSpecificCompilationParticipant;
 import leviathan143.fantasticchainsaw.util.MarkerHelper;
 
-public class SentinelCompilationParticipant extends CompilationParticipant 
+public class SentinelCompilationParticipant extends VersionSpecificCompilationParticipant 
 {	
 	private final ASTParser parser;
 	
 	public SentinelCompilationParticipant() 
 	{
+		super("1.11.2");
 		this.parser = ASTParser.newParser(AST.JLS8);
 	}
 	
@@ -50,11 +51,5 @@ public class SentinelCompilationParticipant extends CompilationParticipant
 		{
 			e.printStackTrace();
 		}
-	}
-	
-	@Override
-	public boolean isActive(IJavaProject project) 
-	{
-		return project.isOpen();
 	}
 }

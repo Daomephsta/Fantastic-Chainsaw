@@ -79,10 +79,8 @@ public class SentinelIssueFinder extends SentinelIssueTool
 	@Override
 	public void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws CoreException
 	{
-		new GradleInterface(comp.getJavaProject());
-		//analyse(compUnit, comp);
+		analyse(compUnit, comp);
 	}
-
 
 	public static class ItemStackNullCheckFinder extends ASTVisitor
 	{

@@ -1,0 +1,39 @@
+initscript
+{
+	dependencies
+	{
+		classpath files('FCGradleExtension.jar')
+	}
+}
+
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.gradle.tooling.provider.model.ToolingModelBuilder
+import leviathan143.fantasticchainsaw.gradle.ForgeModelImpl
+
+apply plugin:FantasticChainsawPlugin
+
+class FantasticChainsawPlugin implements Plugin<Gradle> 
+{
+	void apply(Gradle gradle) 
+	{
+		gradle.afterProject 
+		{
+			p -> def registry = p.getServices().get(ToolingModelBuilderRegistry.class)
+			registry.register(new ForgeModelBuilder())
+		}
+	}
+}
+
+class ForgeModelBuilder implements ToolingModelBuilder
+{
+	public Object buildAll(String modelName, Project project) 
+	{
+		def version = project.extensions.getByName("minecraft").version
+		return new ForgeModelImpl(version)
+	}
+
+	public boolean canBuild(String modelName) 
+	{
+		return modelName.equals("leviathan143.fantasticchainsaw.gradle.ForgeModel")
+	}
+}
