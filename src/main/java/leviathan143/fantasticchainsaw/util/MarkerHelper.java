@@ -26,7 +26,6 @@ public class MarkerHelper
 				marker.setAttribute(IMarker.MESSAGE, message);
 				marker.setAttribute(IMarker.SEVERITY, severity);
 				marker.setAttribute(IMarker.PRIORITY, priority);
-				marker.setAttribute(IMarker.SOURCE_ID, FantasticPlugin.NAME);
 			}
 			return marker;
 		} 

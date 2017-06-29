@@ -35,7 +35,7 @@ public class EclipseHelper
 			Object firstElement = selection.getFirstElement();
 			if (firstElement instanceof IAdaptable)
 			{
-				return ((IAdaptable)firstElement).getAdapter(IProject.class);
+				return (IProject) ((IAdaptable)firstElement).getAdapter(IProject.class);
 			}
 		}
 		return null;
