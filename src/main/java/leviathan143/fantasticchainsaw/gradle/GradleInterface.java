@@ -19,16 +19,23 @@ public class GradleInterface
 				.forProjectDirectory(project.getResource().getLocation().toFile())
 				.connect();
 		
-		InputStream initScriptStream = GradleInterface.class.getResourceAsStream("fantastic-chainsaw-init.gradle");
 		try
 		{
 			IPath state = Platform.getStateLocation(Platform.getBundle("leviathan143.fantasticchainsaw"));
 			File initScriptDest = new File(state.toFile(), "fantastic-chainsaw-init.gradle");
+			File gradleExtensionDest = new File(state.toFile(), "FCGradleExtension.jar");
 			
 			if(!initScriptDest.exists())
 			{
+				InputStream initScriptStream = GradleInterface.class.getResourceAsStream("fantastic-chainsaw-init.gradle");
 				Files.copy(initScriptStream, initScriptDest.toPath());
 				initScriptStream.close();
+			}
+			if(!gradleExtensionDest.exists())
+			{
+				InputStream gradleExtensionStream = GradleInterface.class.getResourceAsStream("FCGradleExtension.jar");
+				Files.copy(gradleExtensionStream, gradleExtensionDest.toPath());
+				gradleExtensionStream.close();
 			}
 			
 			return connection.model(ForgeModel.class).withArguments("--init-script", initScriptDest.getCanonicalPath()).get();
