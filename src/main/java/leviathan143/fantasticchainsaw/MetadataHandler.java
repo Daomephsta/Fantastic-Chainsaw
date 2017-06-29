@@ -23,7 +23,7 @@ public class MetadataHandler
 	private static void createMetaData(IJavaProject project)
 	{
 		ForgeModel forgeModel = GradleInterface.getModel(project);
-		projectToMetadata.put(project.getElementName(), new ProjectMetadata(forgeModel.getVersion(), "NYI"));
+		projectToMetadata.put(project.getElementName(), new ProjectMetadata(forgeModel.getVersion(), forgeModel.getMappings()));
 	}
 	
 	public static class ProjectMetadata

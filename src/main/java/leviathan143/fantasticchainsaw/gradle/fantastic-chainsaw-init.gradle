@@ -28,8 +28,8 @@ class ForgeModelBuilder implements ToolingModelBuilder
 {
 	public Object buildAll(String modelName, Project project) 
 	{
-		def version = project.extensions.getByName("minecraft").version
-		return new ForgeModelImpl(version)
+		def forgeExtension = project.extensions.getByName("minecraft")
+		return new ForgeModelImpl(forgeExtension.version, forgeExtension.mappings)
 	}
 
 	public boolean canBuild(String modelName) 

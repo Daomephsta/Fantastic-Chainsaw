@@ -6,15 +6,23 @@ import java.io.Serializable;
 public class ForgeModelImpl implements ForgeModel, Serializable
 {
 	private final String version;
+	private final String mappings;
 	
-	public ForgeModelImpl(String version) 
+	public ForgeModelImpl(String version, String mappings) 
 	{
 		this.version = version;
+		this.mappings = mappings;
 	}
 	
 	@Override
 	public String getVersion() 
 	{
 		return version;
+	}
+	
+	@Override
+	public String getMappings() 
+	{
+		return mappings;
 	}
 }
