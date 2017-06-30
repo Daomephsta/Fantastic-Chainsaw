@@ -11,6 +11,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
+import leviathan143.fantasticchainsaw.util.EclipseHelper;
+
 public class GradleInterface 
 {	
 	public static ForgeModel getModel(IJavaProject project)
@@ -21,7 +23,7 @@ public class GradleInterface
 		
 		try
 		{
-			IPath state = Platform.getStateLocation(Platform.getBundle("leviathan143.fantasticchainsaw"));
+			IPath state = Platform.getStateLocation(EclipseHelper.getPluginBundle());
 			File initScriptDest = new File(state.toFile(), "fantastic-chainsaw-init.gradle");
 			File gradleExtensionDest = new File(state.toFile(), "FCGradleExtension.jar");
 			

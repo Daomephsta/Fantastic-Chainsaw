@@ -12,6 +12,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -23,6 +24,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.osgi.framework.Bundle;
 
 public class EclipseHelper
 {
@@ -78,5 +80,10 @@ public class EclipseHelper
 		manager.connect(path, LocationKind.IFILE, null);
 		ITextFileBuffer buffer = manager.getTextFileBuffer(path, LocationKind.IFILE);
 		return buffer.getDocument();
+	}
+	
+	public static Bundle getPluginBundle()
+	{
+		return Platform.getBundle("leviathan143.fantasticchainsaw");
 	}
 }
