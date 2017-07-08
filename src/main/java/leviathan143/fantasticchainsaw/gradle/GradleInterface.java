@@ -40,7 +40,8 @@ public class GradleInterface
 				gradleExtensionStream.close();
 			}
 			
-			return connection.model(ForgeModel.class).withArguments("--init-script", initScriptDest.getCanonicalPath()).get();
+			ForgeModel model = connection.model(ForgeModel.class).withArguments("--init-script", initScriptDest.getCanonicalPath()).get();
+			return model;
 		} 
 		catch (IOException e) 
 		{
