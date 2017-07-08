@@ -1,29 +1,43 @@
 package leviathan143.fantasticchainsaw;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import leviathan143.fantasticchainsaw.gradle.ForgeModel;
 import leviathan143.fantasticchainsaw.gradle.GradleInterface;
 
 public class MetadataHandler 
 {
-	private static Map<String, ProjectMetadata> projectToMetadata = new HashMap<String, ProjectMetadata>();
+	private static LoadingCache<IJavaProject, ProjectMetadata> projectToMetadata = CacheBuilder.newBuilder().maximumSize(25).initialCapacity(10).
+			build(new CacheLoader<IJavaProject, ProjectMetadata>() 
+			{
+				@Override
+				public ProjectMetadata load(IJavaProject project) 
+				{
+					ProjectMetadata metadata = null;
+					
+					ForgeModel forgeModel = GradleInterface.getModel(project);
+					metadata = new ProjectMetadata(forgeModel.getVersion(), forgeModel.getMappings());
+					
+					return metadata;
+				}
+			});
+	
+	private static File getMetadataFile(IJavaProject project)
+	{
+		IPath projectRoot = project.getResource().getFullPath();
+		return new File(projectRoot.toFile(), project.getElementName() + ".fcdata");
+	}
 	
 	public static ProjectMetadata getMetadata(IJavaProject project)
 	{
-		String projectName = project.getElementName();
-		if(!projectToMetadata.containsKey(projectName))
-			createMetaData(project);
-		return projectToMetadata.get(projectName);
-	}
-	
-	private static void createMetaData(IJavaProject project)
-	{
-		ForgeModel forgeModel = GradleInterface.getModel(project);
-		projectToMetadata.put(project.getElementName(), new ProjectMetadata(forgeModel.getVersion(), forgeModel.getMappings()));
+		return projectToMetadata.getUnchecked(project);
 	}
 	
 	public static class ProjectMetadata
