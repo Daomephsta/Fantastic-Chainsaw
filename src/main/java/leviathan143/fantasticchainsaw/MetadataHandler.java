@@ -9,6 +9,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import leviathan143.fantasticchainsaw.Versioning.Version;
 import leviathan143.fantasticchainsaw.gradle.ForgeModel;
 import leviathan143.fantasticchainsaw.gradle.GradleInterface;
 
@@ -42,16 +43,16 @@ public class MetadataHandler
 	
 	public static class ProjectMetadata
 	{
-		private final String mcVersion;
+		private final Version mcVersion;
 		private final String mappingVersion;
 		
 		public ProjectMetadata(String mcVersion, String mappingVersion) 
 		{
-			this.mcVersion = mcVersion;
+			this.mcVersion = new Version(mcVersion);
 			this.mappingVersion = mappingVersion;
 		}
 		
-		public String getMcVersion() 
+		public Version getMcVersion() 
 		{
 			return mcVersion;
 		}
