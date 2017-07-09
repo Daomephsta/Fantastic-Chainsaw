@@ -1,8 +1,5 @@
 package leviathan143.fantasticchainsaw;
 
-import org.gradle.internal.impldep.org.testng.Assert;
-import org.junit.Test;
-
 public class Versioning 
 {
 	private static final int MAX_VERSION_SEGMENTS = 3;
@@ -182,29 +179,6 @@ public class Versioning
 		public String toString() 
 		{
 			return maximumVersion + "-";
-		}
-	}
-	
-	public static class VersionNormalCalculationTest
-	{
-		private static final Version V1_12 = new Version("1.12");
-		private static final Version V1_11_2 = new Version("1.11.2");
-		private static final Version V1_11 = new Version("1.11");
-		private static final Version V1_10_2 = new Version("1.10.2");
-		private static final Version V1_10 = new Version("1.10");
-		private static final Version V1_9_4 = new Version("1.9.4");
-		private static final Version V1_9 = new Version("1.9");
-		
-		@Test
-		public void testVersionNormalCalculation() 
-		{
-			Assert.assertEquals(V1_12.getNormal(), 1012000);
-			Assert.assertEquals(V1_11_2.getNormal(), 1011002);
-			Assert.assertEquals(V1_11.getNormal(), 1011000);
-			Assert.assertEquals(V1_10_2.getNormal(), 1010002);
-			Assert.assertEquals(V1_10.getNormal(), 1010000);
-			Assert.assertEquals(V1_9_4.getNormal(), 1009004);
-			Assert.assertEquals(V1_9.getNormal(), 1009000);
 		}
 	}
 }
