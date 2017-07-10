@@ -17,7 +17,7 @@ public class SentinelCompilationParticipant extends VersionSpecificCompilationPa
 	
 	public SentinelCompilationParticipant() 
 	{
-		super("1.11.2+");
+		super("1.11+");
 		this.parser = ASTParser.newParser(AST.JLS8);
 	}
 	
