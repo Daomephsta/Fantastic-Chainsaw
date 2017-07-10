@@ -13,6 +13,11 @@
 			name="Fix Sentinel Issues"
 			defaultHandler="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelIssuePatcher">
 		</command>
+		<command
+			id="leviathan143.fantasticchainsaw.invalidateMetadata"
+			name="Refresh Metadata"
+			defaultHandler="leviathan143.fantasticchainsaw.InvalidateMetadataHandler">
+		</command>
 	</extension>
    	<!--Menu options-->
 	<extension point="org.eclipse.ui.menus">
@@ -28,6 +33,10 @@
    						label="Fix Sentinel Issues">
    					</command>
    				</menu>
+   				<command
+   					commandId="leviathan143.fantasticchainsaw.invalidateMetadata"
+   					label="Invalidate Metadata">
+   				</command>
    			</menu>
    		</menuContribution>
    	</extension>
