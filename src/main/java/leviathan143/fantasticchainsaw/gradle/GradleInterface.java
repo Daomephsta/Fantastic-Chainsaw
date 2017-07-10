@@ -49,6 +49,7 @@ public class GradleInterface
 		}
 		finally 
 		{
+			System.out.println("Closing Gradle connection");
 			connection.close();
 		}
 		return null;

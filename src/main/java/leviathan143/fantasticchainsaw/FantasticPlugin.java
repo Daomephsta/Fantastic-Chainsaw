@@ -1,7 +1,5 @@
 package leviathan143.fantasticchainsaw;
 
-import java.io.File;
-
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
