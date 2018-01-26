@@ -1,0 +1,7 @@
+org.gradle.jvmargs=-Xms256m -Xmx2048m
+mcversion=$mcVer
+forgeversion=$forgeVer
+modversion=$modVer
+mappingsVer=$mappingsVer
+groupID=$groupID
+baseName=$baseName

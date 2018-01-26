@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<!--Commands-->
+	<extension point="org.eclipse.ui.commands">
+		<command
+			id="leviathan143.fantasticchainsaw.mc111.findSentinelIssues"
+			name="%commands.findSentinelIssues"
+			defaultHandler="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelIssueFinder">
+		</command>
+		<command
+			id="leviathan143.fantasticchainsaw.mc111.patchSentinelIssues"
+			name="%commands.patchSentinelIssues"
+			defaultHandler="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelIssuePatcher">
+		</command>
+		<command
+			id="leviathan143.fantasticchainsaw.invalidateMetadata"
+			name="%commands.invalidateMetadata"
+			defaultHandler="leviathan143.fantasticchainsaw.InvalidateMetadataHandler">
+		</command>
+  <command
+        defaultHandler="leviathan143.fantasticchainsaw.RefreshMCPAndForgeHandler"
+        id="leviathan143.fantasticchainsaw.refreshMCPAndForge"
+        name="%commands.refreshMCPAndForge">
+  </command>
+	</extension>
+   	<!--Menu options-->
+	<extension point="org.eclipse.ui.menus">
+   		<menuContribution locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+   			<command
+   					commandId="leviathan143.fantasticchainsaw.invalidateMetadata">
+   			</command>
+       		<command
+             		commandId="leviathan143.fantasticchainsaw.refreshMCPAndForge">
+       		</command>
+   		</menuContribution>
+   		<menuContribution locationURI="menu:project?after=additions">
+         <menu
+               label="%menus.project.fantasticchainsaw">
+            <command
+                  commandId="leviathan143.fantasticchainsaw.mc111.findSentinelIssues">
+            </command>
+            <command
+                  commandId="leviathan143.fantasticchainsaw.mc111.patchSentinelIssues">
+            </command>
+         </menu>
+   		</menuContribution>
+   	</extension>
+ <!--Markers-->
+ <extension id="leviathan143.fantasticchainsaw.markerbase" point="org.eclipse.core.resources.markers"/>
+ <extension
+ 	id="leviathan143.fantasticchainsaw.mc111.sentinelissuemarker"	
+	point="org.eclipse.core.resources.markers">
+    <super type="org.eclipse.core.resources.problemmarker"/>
+    <super type="leviathan143.fantasticchainsaw.markerbase"/>
+ </extension>
+ <!--Compilation Participants-->
+ <extension point="org.eclipse.jdt.core.compilationParticipant">
+ 	<compilationParticipant
+ 		class="leviathan143.fantasticchainsaw.mc111.sentinelhelper.SentinelCompilationParticipant"
+ 		id="SentinelHelper"
+ 		createsProblems="true">
+ 	</compilationParticipant>
+ </extension>
+ <!--Wizards-->
+ <extension point="org.eclipse.ui.newWizards">
+ 	<category 
+ 		id="leviathan143.fantasticchainsaw.wizardCategory"
+ 		name="%wizards.category">
+ 	</category>
+ 	<wizard
+ 		id="leviathan143.fantasticchainsaw.generic.wizards.newForgeMod"
+ 		name="%wizards.newForgeMod"
+ 		icon="src/main/resources/icons/wizards/new_forge_mod.png"
+ 		class="leviathan143.fantasticchainsaw.generic.wizards.ForgeModWizard"
+ 		category="leviathan143.fantasticchainsaw.wizardCategory"
+ 		project="true"
+ 		hasPages="true">
+ 	</wizard>
+ 	<wizard
+ 		id="leviathan143.fantasticchainsaw.generic.wizards.newModel"
+ 		name="%wizards.newModel"
+ 		icon="src/main/resources/icons/wizards/new_forge_mod.png"
+ 		class="leviathan143.fantasticchainsaw.mc18.wizards.model.ModelWizard"
+ 		category="leviathan143.fantasticchainsaw.wizardCategory"
+ 		hasPages="true">
+ 		<selection class="org.eclipse.core.resources.IResource"/>
+ 	</wizard>
+ </extension>
+ <extension point="org.eclipse.ui.editors">
+    <editor
+          class="leviathan143.fantasticchainsaw.generic.editors.language.LanguageFileEditor"
+          contributorClass="leviathan143.fantasticchainsaw.generic.editors.language.LanguageEditorContributor"
+          extensions="lang"
+          id="leviathan143.fantasticchainsaw.generic.editors.language.LanguageFileEditor"
+          name="%editors.languageEditor">
+    </editor>
+ </extension>
+ <extension
+       point="org.eclipse.ui.startup">
+    <startup
+          class="leviathan143.fantasticchainsaw.Startup">
+    </startup>
+ </extension>
+</plugin>

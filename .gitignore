@@ -1,0 +1,13 @@
+/.gradle/
+/bin/
+/build/
+
+.classpath
+.project
+/.settings
+Report.txt
+META-INF/
+/run/*
+/libs/*
+/Raw image files/*
+/Helper Scripts/*
