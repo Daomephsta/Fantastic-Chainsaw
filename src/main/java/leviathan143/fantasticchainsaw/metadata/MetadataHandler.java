@@ -1,6 +1,7 @@
 package leviathan143.fantasticchainsaw.metadata;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 
 import org.eclipse.core.runtime.CoreException;
@@ -10,8 +11,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 import com.google.common.cache.*;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 
 import leviathan143.fantasticchainsaw.FantasticPlugin;
 import leviathan143.fantasticchainsaw.Versioning.Version;
@@ -66,13 +66,13 @@ public class MetadataHandler
 							// If it doesn't, load the metadata from the
 							// build.gradle, create the metadata file and write
 							// the metadata to the file
-							if(project.getProject().hasNature(ForgeNature.NATURE_ID))
+							if (project.getProject().hasNature(ForgeNature.NATURE_ID))
 							{
 								ForgeModel forgeModel = GradleInterface.getForgeModel(project);
-								metadata = new ForgeProjectMetadata(forgeModel.getMCVersion(), forgeModel.getForgeVersion(),
-										forgeModel.getMappings());
+								metadata = new ForgeProjectMetadata(forgeModel.getMCVersion(),
+										forgeModel.getForgeVersion(), forgeModel.getMappings());
 							}
-							else metadata = new NonForgeProjectMetadata();
+							else metadata = new JavaProjectMetadata();
 							metadata.writeToFile(metadataFile);
 						}
 					}
@@ -104,8 +104,47 @@ public class MetadataHandler
 
 	public static abstract class ProjectMetadata
 	{
+		private static final String FORGE_METADATA_ID = "forge";
+		private static final String JAVA_METADATA_ID = "java";
 		private static final Gson METADATA_SERIALISER = new GsonBuilder()
-				.registerTypeAdapter(Version.class, new Version.Serialiser()).setPrettyPrinting().create();
+				.registerTypeAdapter(Version.class, new Version.Serialiser())
+				.registerTypeHierarchyAdapter(ProjectMetadata.class, new Serialiser()).setPrettyPrinting().create();
+
+		private static class Serialiser implements JsonSerializer<ProjectMetadata>, JsonDeserializer<ProjectMetadata>
+		{
+			@Override
+			public ProjectMetadata deserialize(JsonElement json, Type targetType, JsonDeserializationContext context)
+					throws JsonParseException
+			{
+				JsonObject jsonObj = (JsonObject) json;
+				String type = jsonObj.get("type").getAsString();
+				switch (type)
+				{
+				case FORGE_METADATA_ID:
+					return new ForgeProjectMetadata(jsonObj.get("mcVersion").getAsString(),
+							jsonObj.get("forgeVersion").getAsString(), jsonObj.get("mappings").getAsString());
+				case JAVA_METADATA_ID:
+					return new JavaProjectMetadata();
+				default:
+					throw new JsonSyntaxException(type + " is an unknown metadata type");
+				}
+			}
+
+			@Override
+			public JsonElement serialize(ProjectMetadata metadata, Type type, JsonSerializationContext context)
+			{
+				JsonObject jsonObj = new JsonObject();
+				String metadataTypeID = null;
+				if (type == ForgeProjectMetadata.class) metadataTypeID = FORGE_METADATA_ID;
+				else if (type == JavaProjectMetadata.class) metadataTypeID = JAVA_METADATA_ID;
+				if (type == null) throw new JsonSyntaxException(type + " is an unknown metadata type");
+
+				jsonObj.addProperty("type", metadataTypeID);
+				metadata.serialise(jsonObj);
+				return jsonObj;
+			}
+
+		}
 
 		public static ProjectMetadata createFromFile(File file) throws IOException
 		{
@@ -122,36 +161,7 @@ public class MetadataHandler
 				writer.write(METADATA_SERIALISER.toJson(this));
 			}
 		}
+
+		public abstract void serialise(JsonObject json);
 	}
-
-	public static class ForgeProjectMetadata extends ProjectMetadata
-	{
-		private final Version mcVersion;
-		private final Version forgeVersion;
-		private final String mappingVersion;
-
-		public ForgeProjectMetadata(String mcVersion, String forgeVersion, String mappingVersion)
-		{
-			this.mcVersion = new Version(mcVersion);
-			this.forgeVersion = new Version(forgeVersion);
-			this.mappingVersion = mappingVersion;
-		}
-
-		public Version getMCVersion()
-		{
-			return mcVersion;
-		}
-
-		public Version getForgeVersion()
-		{
-			return forgeVersion;
-		}
-
-		public String getMappingVersion()
-		{
-			return mappingVersion;
-		}
-	}
-
-	public static class NonForgeProjectMetadata extends ProjectMetadata {}
 }

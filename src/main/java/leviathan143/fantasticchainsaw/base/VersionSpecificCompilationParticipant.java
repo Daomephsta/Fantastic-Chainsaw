@@ -5,8 +5,8 @@ import org.eclipse.jdt.core.compiler.CompilationParticipant;
 
 import leviathan143.fantasticchainsaw.Versioning;
 import leviathan143.fantasticchainsaw.Versioning.IVersionConstraint;
+import leviathan143.fantasticchainsaw.metadata.ForgeProjectMetadata;
 import leviathan143.fantasticchainsaw.metadata.MetadataHandler;
-import leviathan143.fantasticchainsaw.metadata.MetadataHandler.ForgeProjectMetadata;
 import leviathan143.fantasticchainsaw.metadata.MetadataHandler.ProjectMetadata;
 
 public class VersionSpecificCompilationParticipant extends CompilationParticipant
