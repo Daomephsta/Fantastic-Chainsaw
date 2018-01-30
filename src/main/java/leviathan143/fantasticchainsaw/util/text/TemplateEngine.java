@@ -10,42 +10,42 @@ import java.util.Map;
 
 public class TemplateEngine
 {
-    private String templateSource;
+	private String templateSource;
 
-    public TemplateEngine(File template) throws IOException
-    {
-	try (BufferedReader reader = new BufferedReader(new FileReader(template)))
+	public TemplateEngine(File template) throws IOException
 	{
-	    StringBuilder sourceBuilder = new StringBuilder();
-	    String line;
-	    
-	    while ((line = reader.readLine()) != null)
-	    {
-		sourceBuilder.append(line + System.lineSeparator());
-	    }
-	    templateSource = sourceBuilder.toString();
-	}
-    }
+		try (BufferedReader reader = new BufferedReader(new FileReader(template)))
+		{
+			StringBuilder sourceBuilder = new StringBuilder();
+			String line;
 
-    public String applyTemplate(Map<String, String> argMap)
-    {
-	String transformedSource = new String(templateSource);
-	for(Map.Entry<String, String> arg : argMap.entrySet())
-	{
-	    transformedSource = transformedSource.replace("$" + arg.getKey(), arg.getValue());
+			while ((line = reader.readLine()) != null)
+			{
+				sourceBuilder.append(line + System.lineSeparator());
+			}
+			templateSource = sourceBuilder.toString();
+		}
 	}
-	return transformedSource;   
-    }
 
-    public void makeFile(File target, Map<String, String> argMap) throws IOException
-    {
-	try(BufferedWriter writer = new BufferedWriter(new FileWriter(target)))
+	public String applyTemplate(Map<String, String> argMap)
 	{
-	    for(String line : applyTemplate(argMap).split(System.lineSeparator()))
-	    {
-		writer.write(line);
-		writer.newLine();
-	    }
+		String transformedSource = new String(templateSource);
+		for (Map.Entry<String, String> arg : argMap.entrySet())
+		{
+			transformedSource = transformedSource.replace("$" + arg.getKey(), arg.getValue());
+		}
+		return transformedSource;
 	}
-    }
+
+	public void makeFile(File target, Map<String, String> argMap) throws IOException
+	{
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(target)))
+		{
+			for (String line : applyTemplate(argMap).split(System.lineSeparator()))
+			{
+				writer.write(line);
+				writer.newLine();
+			}
+		}
+	}
 }

@@ -15,22 +15,22 @@ import leviathan143.fantasticchainsaw.interfaces.mcpbot.MCPBotInterface;
 public class Startup implements IStartup
 {
 
-    @Override
-    public void earlyStartup()
-    {
-	Job fetchMCPAndForgeVersions = new Job(MiscMessages.retrievingForgeAndMCPVersions)
-	    {
-		@Override
-		protected IStatus run(IProgressMonitor monitor)
+	@Override
+	public void earlyStartup()
+	{
+		Job fetchMCPAndForgeVersions = new Job(MiscMessages.retrievingForgeAndMCPVersions)
 		{
-		    monitor.subTask(ForgeMavenInterfaceMessages.retrievingForgeVersions);
-		    ForgeMavenInterface.updateForgeVersions();
-		    monitor.subTask(MCPBotInterfaceMessages.retrievingMappings);
-		    MCPBotInterface.updateMCPVersions();
-		    return Status.OK_STATUS;
-		}
-	    };
-	fetchMCPAndForgeVersions.schedule();
-    }
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				monitor.subTask(ForgeMavenInterfaceMessages.retrievingForgeVersions);
+				ForgeMavenInterface.updateForgeVersions();
+				monitor.subTask(MCPBotInterfaceMessages.retrievingMappings);
+				MCPBotInterface.updateMCPVersions();
+				return Status.OK_STATUS;
+			}
+		};
+		fetchMCPAndForgeVersions.schedule();
+	}
 
 }

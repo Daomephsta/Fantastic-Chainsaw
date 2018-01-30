@@ -30,135 +30,131 @@ import leviathan143.fantasticchainsaw.util.VersionTree;
 
 public class ForgeMavenInterface
 {
-    private static final String FORGE_VERSIONS_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
-    private static final Gson FORGE_VERSION_GSON = new GsonBuilder()
-	    .registerTypeAdapter(Version.class, new Version.Serialiser()).create();
-    private static final IVersionConstraint FG_2_3_CONSTRAINT = Versioning.createVersionConstraint("1.12+");
-    private static final IVersionConstraint FG_2_2_CONSTRAINT = Versioning.createVersionConstraint("1.9.4-1.11.2");
-    private static final IVersionConstraint FG_2_1_CONSTRAINT = Versioning.createVersionConstraint("1.8.8-1.9");
-    private static final IVersionConstraint FG_2_0_2_CONSTRAINT = Versioning.createVersionConstraint("1.8");
-    private static final IVersionConstraint FG_1_2_CONSTRAINT = Versioning.createVersionConstraint("1.7.2-1.7.10");
+	private static final String FORGE_VERSIONS_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
+	private static final Gson FORGE_VERSION_GSON = new GsonBuilder()
+			.registerTypeAdapter(Version.class, new Version.Serialiser()).create();
+	private static final IVersionConstraint FG_2_3_CONSTRAINT = Versioning.createVersionConstraint("1.12+");
+	private static final IVersionConstraint FG_2_2_CONSTRAINT = Versioning.createVersionConstraint("1.9.4-1.11.2");
+	private static final IVersionConstraint FG_2_1_CONSTRAINT = Versioning.createVersionConstraint("1.8.8-1.9");
+	private static final IVersionConstraint FG_2_0_2_CONSTRAINT = Versioning.createVersionConstraint("1.8");
+	private static final IVersionConstraint FG_1_2_CONSTRAINT = Versioning.createVersionConstraint("1.7.2-1.7.10");
 
-    private static Map<Integer, ForgeVersionArtifacts> artifacts;
-    private static Multimap<String, ForgeVersionArtifacts> mcVersionToArtifacts = ArrayListMultimap.create(15, 100);
-    private static VersionTree mcVersionTree = new VersionTree();
-    private static Set<Version> mcVersions = Collections.emptySet();
+	private static Map<Integer, ForgeVersionArtifacts> artifacts;
+	private static Multimap<String, ForgeVersionArtifacts> mcVersionToArtifacts = ArrayListMultimap.create(15, 100);
+	private static VersionTree mcVersionTree = new VersionTree();
+	private static Set<Version> mcVersions = Collections.emptySet();
 
-    @SuppressWarnings("unused")
-    private static class ForgeVersionArtifacts implements Comparable<ForgeVersionArtifacts>
-    {
-	private String branch;
-	private int build;
-	private String[][] files;
-	private String mcversion;
-	private float modified;
-	private Version version;
-
-	@Override
-	public int compareTo(ForgeVersionArtifacts other)
+	@SuppressWarnings("unused")
+	private static class ForgeVersionArtifacts implements Comparable<ForgeVersionArtifacts>
 	{
-	    return version.compareTo(other.version);
-	}
-    }
+		private String branch;
+		private int build;
+		private String[][] files;
+		private String mcversion;
+		private float modified;
+		private Version version;
 
-    @SuppressWarnings("serial")
-    public static void updateForgeVersions()
-    {
-	MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME).newMessageStream();
-	try
+		@Override
+		public int compareTo(ForgeVersionArtifacts other)
+		{
+			return version.compareTo(other.version);
+		}
+	}
+
+	@SuppressWarnings("serial")
+	public static void updateForgeVersions()
 	{
-	    URL versionJSONURL = new URL(FORGE_VERSIONS_URL);
-	    URLConnection connection = versionJSONURL.openConnection();
-	    connection.connect();
+		MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME).newMessageStream();
+		try
+		{
+			URL versionJSONURL = new URL(FORGE_VERSIONS_URL);
+			URLConnection connection = versionJSONURL.openConnection();
+			connection.connect();
 
-	    InputStream in = connection.getInputStream();
-	    consoleStream.println(ForgeMavenInterfaceMessages.retrievingForgeVersions);
-	    long startTime = System.currentTimeMillis();
-	    JsonObject json = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject();
-	    artifacts = FORGE_VERSION_GSON.fromJson(json.get("number"),
-		    new TypeToken<Map<Integer, ForgeVersionArtifacts>>()
-			{}.getType());
-	    in.close();
+			InputStream in = connection.getInputStream();
+			consoleStream.println(ForgeMavenInterfaceMessages.retrievingForgeVersions);
+			long startTime = System.currentTimeMillis();
+			JsonObject json = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject();
+			artifacts = FORGE_VERSION_GSON.fromJson(json.get("number"),
+					new TypeToken<Map<Integer, ForgeVersionArtifacts>>()
+					{}.getType());
+			in.close();
 
-	    for (Entry<Integer, ForgeVersionArtifacts> entry : artifacts.entrySet())
-	    {
-		mcVersionToArtifacts.put(entry.getValue().mcversion, entry.getValue());
-	    }
-	    mcVersionTree.clear();
-	    mcVersions = mcVersionToArtifacts.keys().stream().filter(verString -> {
-		return !verString.equals("1.7.10_pre4");
-	    }).map(Version::new).filter(version -> version.compareTo(Versioning.V1_7_10) >= 0)
-		    .collect(Collectors.toCollection(() -> new TreeSet<Version>()));
-	    for (Version version : mcVersions)
-	    {
-		mcVersionTree.put(version.toString());
-	    }
-	    consoleStream.println(String.format(ForgeMavenInterfaceMessages.forgeVersionsRetrieved,
-		    System.currentTimeMillis() - startTime));
+			for (Entry<Integer, ForgeVersionArtifacts> entry : artifacts.entrySet())
+			{
+				mcVersionToArtifacts.put(entry.getValue().mcversion, entry.getValue());
+			}
+			mcVersionTree.clear();
+			mcVersions = mcVersionToArtifacts.keys().stream().filter(verString ->
+			{
+				return !verString.equals("1.7.10_pre4");
+			}).map(Version::new).filter(version -> version.compareTo(Versioning.V1_7_10) >= 0)
+					.collect(Collectors.toCollection(() -> new TreeSet<Version>()));
+			for (Version version : mcVersions)
+			{
+				mcVersionTree.put(version.toString());
+			}
+			consoleStream.println(String.format(ForgeMavenInterfaceMessages.forgeVersionsRetrieved,
+					System.currentTimeMillis() - startTime));
+		}
+		catch (MalformedURLException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			consoleStream.println(ForgeMavenInterfaceMessages.forgeVersionsNotRetrieved);
+			e.printStackTrace();
+		}
 	}
-	catch (MalformedURLException e)
+
+	public static Collection<Version> getAvailableMCVersions()
 	{
-	    e.printStackTrace();
+		return mcVersions;
 	}
-	catch (IOException e)
+
+	public static Collection<String> getSiblingVersions(String version)
 	{
-	    consoleStream.println(ForgeMavenInterfaceMessages.forgeVersionsNotRetrieved);
-	    e.printStackTrace();
+		return mcVersionTree.getSiblings(version);
 	}
-    }
 
-    public static Collection<Version> getAvailableMCVersions()
-    {
-	return mcVersions;
-    }
-
-    public static Collection<String> getSiblingVersions(String version)
-    {
-	return mcVersionTree.getSiblings(version);
-    }
-
-    public static Collection<String> getAvailableForgeVersions(String mcVersion)
-    {
-	if (!mcVersionToArtifacts.containsKey(mcVersion))
+	public static Collection<String> getAvailableForgeVersions(String mcVersion)
 	{
-	    MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME)
-		    .newMessageStream();
-	    consoleStream.println(String.format(ForgeMavenInterfaceMessages.noForgeVersions, mcVersion));
-	    return Collections.emptyList();
+		if (!mcVersionToArtifacts.containsKey(mcVersion))
+		{
+			MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME)
+					.newMessageStream();
+			consoleStream.println(String.format(ForgeMavenInterfaceMessages.noForgeVersions, mcVersion));
+			return Collections.emptyList();
+		}
+		return mcVersionToArtifacts.get(mcVersion).stream().sorted(Collections.reverseOrder())
+				.map(ForgeMavenInterface::getVersionIdentifier).collect(Collectors.toList());
 	}
-	return mcVersionToArtifacts.get(mcVersion).stream().sorted(Collections.reverseOrder())
-		.map(ForgeMavenInterface::getVersionIdentifier).collect(Collectors.toList());
-    }
 
-    public static String getVersionIdentifier(int buildNumber)
-    {
-	return getVersionIdentifier(artifacts.get(buildNumber));
-    }
-
-    private static String getVersionIdentifier(ForgeVersionArtifacts artifacts)
-    {
-	if (artifacts.branch != null) return artifacts.mcversion + "-" + artifacts.version + "-" + artifacts.branch;
-	return artifacts.mcversion + "-" + artifacts.version;
-    }
-
-    public static String getAppropriateForgeGradleVersion(Version mcVersion)
-    {
-	if (FG_2_3_CONSTRAINT.acceptsVersion(mcVersion))
-	    return "2.3-SNAPSHOT";
-	else if (FG_2_2_CONSTRAINT.acceptsVersion(mcVersion))
-	    return "2.2-SNAPSHOT";
-	else if (FG_2_1_CONSTRAINT.acceptsVersion(mcVersion))
-	    return "2.1-SNAPSHOT";
-	else if (FG_2_0_2_CONSTRAINT.acceptsVersion(mcVersion))
-	    return "2.0.2-SNAPSHOT";
-	else if (FG_1_2_CONSTRAINT.acceptsVersion(mcVersion))
-	    return "1.2-SNAPSHOT";
-	else
+	public static String getVersionIdentifier(int buildNumber)
 	{
-	    MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME)
-		    .newMessageStream();
-	    consoleStream.println("Could not determine appropriate ForgeGradle version for MC version " + mcVersion);
-	    return null;
+		return getVersionIdentifier(artifacts.get(buildNumber));
 	}
-    }
+
+	private static String getVersionIdentifier(ForgeVersionArtifacts artifacts)
+	{
+		if (artifacts.branch != null) return artifacts.mcversion + "-" + artifacts.version + "-" + artifacts.branch;
+		return artifacts.mcversion + "-" + artifacts.version;
+	}
+
+	public static String getAppropriateForgeGradleVersion(Version mcVersion)
+	{
+		if (FG_2_3_CONSTRAINT.acceptsVersion(mcVersion)) return "2.3-SNAPSHOT";
+		else if (FG_2_2_CONSTRAINT.acceptsVersion(mcVersion)) return "2.2-SNAPSHOT";
+		else if (FG_2_1_CONSTRAINT.acceptsVersion(mcVersion)) return "2.1-SNAPSHOT";
+		else if (FG_2_0_2_CONSTRAINT.acceptsVersion(mcVersion)) return "2.0.2-SNAPSHOT";
+		else if (FG_1_2_CONSTRAINT.acceptsVersion(mcVersion)) return "1.2-SNAPSHOT";
+		else
+		{
+			MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME)
+					.newMessageStream();
+			consoleStream.println("Could not determine appropriate ForgeGradle version for MC version " + mcVersion);
+			return null;
+		}
+	}
 }

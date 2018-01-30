@@ -5,7 +5,7 @@ import org.eclipse.swt.events.SelectionListener;
 
 public interface ISelectionListener extends SelectionListener
 {
-    @Override
-    default void widgetDefaultSelected(SelectionEvent e)
-    {}
+	@Override
+	default void widgetDefaultSelected(SelectionEvent e)
+	{}
 }

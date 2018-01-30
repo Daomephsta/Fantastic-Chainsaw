@@ -13,36 +13,37 @@ import org.eclipse.ui.internal.ide.misc.ContainerSelectionGroup;
 import leviathan143.fantasticchainsaw.base.ObservableValue;
 
 @SuppressWarnings("restriction")
-public class ModelFileCreationPage extends WizardNewFileCreationPage 
+public class ModelFileCreationPage extends WizardNewFileCreationPage
 {
-    private ObservableValue<IPath> modelFilePath = new ObservableValue<IPath>();
+	private ObservableValue<IPath> modelFilePath = new ObservableValue<IPath>();
 
-    public ModelFileCreationPage(IStructuredSelection selection) 
-    {
-	super("createFile", selection);
-    }
-
-    @Override
-    public void handleEvent(Event event) 
-    {
-	super.handleEvent(event);
-
-	ContainerSelectionGroup selection = null;
-	if(event.type == SWT.Modify)
+	public ModelFileCreationPage(IStructuredSelection selection)
 	{
-	    if(event.widget instanceof Control)
-	    {
-		Control control = (Control) event.widget;
-		if(control.getParent() instanceof ContainerSelectionGroup) selection = (ContainerSelectionGroup) control.getParent();
-	    }
+		super("createFile", selection);
 	}
-	else if(event.type == SWT.Selection) selection = (ContainerSelectionGroup) event.widget;
 
-	if(selection != null) modelFilePath.setValue(selection.getContainerFullPath());
-    }
+	@Override
+	public void handleEvent(Event event)
+	{
+		super.handleEvent(event);
 
-    public void addModelPathObserver(Observer observer)
-    {
-	modelFilePath.addObserver(observer);
-    }
+		ContainerSelectionGroup selection = null;
+		if (event.type == SWT.Modify)
+		{
+			if (event.widget instanceof Control)
+			{
+				Control control = (Control) event.widget;
+				if (control.getParent() instanceof ContainerSelectionGroup)
+					selection = (ContainerSelectionGroup) control.getParent();
+			}
+		}
+		else if (event.type == SWT.Selection) selection = (ContainerSelectionGroup) event.widget;
+
+		if (selection != null) modelFilePath.setValue(selection.getContainerFullPath());
+	}
+
+	public void addModelPathObserver(Observer observer)
+	{
+		modelFilePath.addObserver(observer);
+	}
 }

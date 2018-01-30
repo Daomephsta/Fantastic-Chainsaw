@@ -14,44 +14,44 @@ import leviathan143.fantasticchainsaw.util.MarkerHelper;
 
 public class SentinelCompilationParticipant extends VersionSpecificCompilationParticipant
 {
-    private final ASTParser parser;
+	private final ASTParser parser;
 
-    public SentinelCompilationParticipant()
-    {
-	super("1.11+");
-	this.parser = ASTParser.newParser(AST.JLS8);
-    }
+	public SentinelCompilationParticipant()
+	{
+		super("1.11+");
+		this.parser = ASTParser.newParser(AST.JLS8);
+	}
 
-    @Override
-    public void reconcile(ReconcileContext context)
-    {
-	TypeFetcher.fetchTypes(context.getWorkingCopy().getJavaProject());
-	parser.setProject(context.getWorkingCopy().getJavaProject());
-	parser.setSource(context.getWorkingCopy());
-	parser.setKind(ASTParser.K_COMPILATION_UNIT);
-	parser.setResolveBindings(true);
-	CompilationUnit comp = (CompilationUnit) parser.createAST(null);
-	try
+	@Override
+	public void reconcile(ReconcileContext context)
 	{
-	    SentinelIssueFinder.markIssues(comp, context.getWorkingCopy());
+		TypeFetcher.fetchTypes(context.getWorkingCopy().getJavaProject());
+		parser.setProject(context.getWorkingCopy().getJavaProject());
+		parser.setSource(context.getWorkingCopy());
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setResolveBindings(true);
+		CompilationUnit comp = (CompilationUnit) parser.createAST(null);
+		try
+		{
+			SentinelIssueFinder.markIssues(comp, context.getWorkingCopy());
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
 	}
-	catch (CoreException e)
-	{
-	    e.printStackTrace();
-	}
-    }
 
-    @Override
-    public void cleanStarting(IJavaProject project)
-    {
-	try
+	@Override
+	public void cleanStarting(IJavaProject project)
 	{
-	    project.getCorrespondingResource().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true,
-		    IResource.DEPTH_INFINITE);
+		try
+		{
+			project.getCorrespondingResource().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true,
+					IResource.DEPTH_INFINITE);
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
 	}
-	catch (CoreException e)
-	{
-	    e.printStackTrace();
-	}
-    }
 }

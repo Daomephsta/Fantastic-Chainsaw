@@ -9,23 +9,23 @@ import leviathan143.fantasticchainsaw.interfaces.minecraft.ResourceLocation;
 
 public class ItemModel extends JSONModel
 {
-    private List<ModelOverride> overrides;
-    
-    @Override
-    protected void deserialise(JsonElement jsonElement)
-    {
-	this.type = ModelType.ITEM;
-    }
+	private List<ModelOverride> overrides;
 
-    @Override
-    protected void serialise(JsonElement jsonElement)
-    {
-	
-    }
-    
-    public class ModelOverride
-    {
-	private Map<ResourceLocation, Float> predicate;
-	public JSONModel model;
-    }
+	@Override
+	protected void deserialise(JsonElement jsonElement)
+	{
+		this.type = ModelType.ITEM;
+	}
+
+	@Override
+	protected void serialise(JsonElement jsonElement)
+	{
+
+	}
+
+	public class ModelOverride
+	{
+		private Map<ResourceLocation, Float> predicate;
+		public JSONModel model;
+	}
 }

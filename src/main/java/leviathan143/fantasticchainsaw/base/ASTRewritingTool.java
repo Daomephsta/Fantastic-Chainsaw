@@ -16,33 +16,33 @@ import org.eclipse.text.edits.TextEdit;
 
 public abstract class ASTRewritingTool extends ASTDependentTool
 {
-    public ASTRewritingTool(String taskDesc)
-    {
-	super(taskDesc);
-    }
+	public ASTRewritingTool(String taskDesc)
+	{
+		super(taskDesc);
+	}
 
-    @Override
-    protected void performTask(CompilationUnit compUnit, ICompilationUnit comp)
-	    throws CoreException, MalformedTreeException, BadLocationException
-    {
-	ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
-	IPath filePath = compUnit.getJavaElement().getPath();
+	@Override
+	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp)
+			throws CoreException, MalformedTreeException, BadLocationException
+	{
+		ITextFileBufferManager bufferManager = FileBuffers.getTextFileBufferManager();
+		IPath filePath = compUnit.getJavaElement().getPath();
 
-	bufferManager.connect(filePath, LocationKind.IFILE, null);
-	ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
-	IDocument doc = fileBuffer.getDocument();
+		bufferManager.connect(filePath, LocationKind.IFILE, null);
+		ITextFileBuffer fileBuffer = bufferManager.getTextFileBuffer(filePath, LocationKind.IFILE);
+		IDocument doc = fileBuffer.getDocument();
 
-	ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
+		ASTRewrite rewriter = ASTRewrite.create(compUnit.getAST());
 
-	rewriteAST(compUnit, comp, rewriter);
+		rewriteAST(compUnit, comp, rewriter);
 
-	TextEdit edits = rewriter.rewriteAST(doc, null);
-	edits.apply(doc);
+		TextEdit edits = rewriter.rewriteAST(doc, null);
+		edits.apply(doc);
 
-	fileBuffer.commit(null, true);
+		fileBuffer.commit(null, true);
 
-	bufferManager.disconnect(filePath, LocationKind.IFILE, null);
-    }
+		bufferManager.disconnect(filePath, LocationKind.IFILE, null);
+	}
 
-    protected abstract void rewriteAST(CompilationUnit compUnit, ICompilationUnit comp, ASTRewrite rewriter);
+	protected abstract void rewriteAST(CompilationUnit compUnit, ICompilationUnit comp, ASTRewrite rewriter);
 }

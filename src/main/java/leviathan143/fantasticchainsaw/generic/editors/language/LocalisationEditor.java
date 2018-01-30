@@ -359,7 +359,7 @@ public class LocalisationEditor extends EditorPart
 		Vietnamese("vi_vn", "Tiếng Việt"),
 		Chinese_Simplified("zh_cn", "简体中文"),
 		Chinese_Traditional("zh_tw", "繁體中文");
-		
+
 		private static final Map<String, Language> LANGCODE_TO_LANG = Maps.newHashMap();
 		static
 		{

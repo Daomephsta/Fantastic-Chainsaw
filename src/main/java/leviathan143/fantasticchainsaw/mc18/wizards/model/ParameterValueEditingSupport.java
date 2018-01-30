@@ -7,36 +7,36 @@ import org.eclipse.jface.viewers.TextCellEditor;
 
 public class ParameterValueEditingSupport extends EditingSupport
 {
-    private final CellEditor editor;
+	private final CellEditor editor;
 
-    public ParameterValueEditingSupport(TableViewer viewer)
-    {
-	super(viewer);
-	editor = new TextCellEditor(viewer.getTable());
-    }
+	public ParameterValueEditingSupport(TableViewer viewer)
+	{
+		super(viewer);
+		editor = new TextCellEditor(viewer.getTable());
+	}
 
-    @Override
-    protected void setValue(Object obj, Object value)
-    {
-	((ModelParameterModel.TextureVariable) obj).setValue((String) value);
-	getViewer().update(obj, null);
-    }
+	@Override
+	protected void setValue(Object obj, Object value)
+	{
+		((ModelParameterModel.TextureVariable) obj).setValue((String) value);
+		getViewer().update(obj, null);
+	}
 
-    @Override
-    protected Object getValue(Object obj)
-    {
-	return ((ModelParameterModel.TextureVariable) obj).getValue();
-    }
+	@Override
+	protected Object getValue(Object obj)
+	{
+		return ((ModelParameterModel.TextureVariable) obj).getValue();
+	}
 
-    @Override
-    protected CellEditor getCellEditor(Object obj)
-    {
-	return editor;
-    }
+	@Override
+	protected CellEditor getCellEditor(Object obj)
+	{
+		return editor;
+	}
 
-    @Override
-    protected boolean canEdit(Object obj)
-    {
-	return true;
-    }
+	@Override
+	protected boolean canEdit(Object obj)
+	{
+		return true;
+	}
 }

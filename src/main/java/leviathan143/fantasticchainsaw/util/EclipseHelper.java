@@ -34,90 +34,90 @@ import org.osgi.framework.Bundle;
 
 public class EclipseHelper
 {
-    public static IProject getFirstSelectedProject()
-    {
-	IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-	if (window != null)
+	public static IProject getFirstSelectedProject()
 	{
-	    IStructuredSelection selection = (IStructuredSelection) window.getSelectionService().getSelection();
-	    Object firstElement = selection.getFirstElement();
-	    if (firstElement instanceof IAdaptable)
-	    {
-		return ((IAdaptable) firstElement).getAdapter(IProject.class);
-	    }
-	}
-	return null;
-    }
-
-    public static List<ICompilationUnit> getCurrentSelectedCompilationUnits() throws JavaModelException
-    {
-	List<ICompilationUnit> compUnits = new ArrayList<ICompilationUnit>();
-	IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-	if (window != null)
-	{
-	    ISelection selection = window.getSelectionService().getSelection();
-	    if (selection instanceof IStructuredSelection)
-	    {
-		for (Iterator<?> iter = ((IStructuredSelection) selection).iterator(); iter.hasNext();)
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window != null)
 		{
-		    Object obj = iter.next();
-		    if (obj instanceof ICompilationUnit)
-			compUnits.add((ICompilationUnit) obj);
-		    else if (obj instanceof IPackageFragment)
-			Collections.addAll(compUnits, ((IPackageFragment) obj).getCompilationUnits());
-		    else if (obj instanceof IPackageFragmentRoot)
-		    {
-			IPackageFragmentRoot root = ((IPackageFragmentRoot) obj);
-			for (IJavaElement child : root.getChildren())
+			IStructuredSelection selection = (IStructuredSelection) window.getSelectionService().getSelection();
+			Object firstElement = selection.getFirstElement();
+			if (firstElement instanceof IAdaptable)
 			{
-			    if (child instanceof IPackageFragment)
-				Collections.addAll(compUnits, ((IPackageFragment) child).getCompilationUnits());
+				return ((IAdaptable) firstElement).getAdapter(IProject.class);
 			}
-		    }
-		    else if (obj instanceof IJavaProject)
-		    {
-			for (IPackageFragment fragment : ((IJavaProject) obj).getPackageFragments())
-			    Collections.addAll(compUnits, fragment.getCompilationUnits());
-		    }
 		}
-	    }
+		return null;
 	}
-	return compUnits;
-    }
-    
-    public static IDocument getSharedWorkingCopy(ITextFileBufferManager manager, CompilationUnit comp) throws CoreException
-    {
-	IPath path = comp.getJavaElement().getPath();
-	manager.connect(path, LocationKind.IFILE, null);
-	ITextFileBuffer buffer = manager.getTextFileBuffer(path, LocationKind.IFILE);
-	return buffer.getDocument();
-    }
 
-    public static Bundle getPluginBundle()
-    {
-	return Platform.getBundle("leviathan143.fantasticchainsaw");
-    }
-
-    public static IClasspathEntry getClasspathFile(IJavaProject project, String fileName) throws JavaModelException
-    {
-	for(IClasspathEntry entry : project.getRawClasspath())
+	public static List<ICompilationUnit> getCurrentSelectedCompilationUnits() throws JavaModelException
 	{
-	    if(entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY)
-	    {
-		IPath entryPath = entry.getPath();
-		if (entryPath.segment(entryPath.segmentCount() - 1).equals(fileName)) return entry;
-	    }
+		List<ICompilationUnit> compUnits = new ArrayList<ICompilationUnit>();
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window != null)
+		{
+			ISelection selection = window.getSelectionService().getSelection();
+			if (selection instanceof IStructuredSelection)
+			{
+				for (Iterator<?> iter = ((IStructuredSelection) selection).iterator(); iter.hasNext();)
+				{
+					Object obj = iter.next();
+					if (obj instanceof ICompilationUnit) compUnits.add((ICompilationUnit) obj);
+					else if (obj instanceof IPackageFragment)
+						Collections.addAll(compUnits, ((IPackageFragment) obj).getCompilationUnits());
+					else if (obj instanceof IPackageFragmentRoot)
+					{
+						IPackageFragmentRoot root = ((IPackageFragmentRoot) obj);
+						for (IJavaElement child : root.getChildren())
+						{
+							if (child instanceof IPackageFragment)
+								Collections.addAll(compUnits, ((IPackageFragment) child).getCompilationUnits());
+						}
+					}
+					else if (obj instanceof IJavaProject)
+					{
+						for (IPackageFragment fragment : ((IJavaProject) obj).getPackageFragments())
+							Collections.addAll(compUnits, fragment.getCompilationUnits());
+					}
+				}
+			}
+		}
+		return compUnits;
 	}
-	return null;
-    }
 
-    public static MessageConsole getOrCreateConsole(String name)
-    {
-	IConsoleManager manager = ConsolePlugin.getDefault().getConsoleManager();
-	for (IConsole console : manager.getConsoles()) 
-	    if (name.equals(console.getName())) return (MessageConsole) console;
-	MessageConsole newConsole = new MessageConsole(name, null);
-	manager.addConsoles(new IConsole[] { newConsole });
-	return newConsole;
-    }
+	public static IDocument getSharedWorkingCopy(ITextFileBufferManager manager, CompilationUnit comp)
+			throws CoreException
+	{
+		IPath path = comp.getJavaElement().getPath();
+		manager.connect(path, LocationKind.IFILE, null);
+		ITextFileBuffer buffer = manager.getTextFileBuffer(path, LocationKind.IFILE);
+		return buffer.getDocument();
+	}
+
+	public static Bundle getPluginBundle()
+	{
+		return Platform.getBundle("leviathan143.fantasticchainsaw");
+	}
+
+	public static IClasspathEntry getClasspathFile(IJavaProject project, String fileName) throws JavaModelException
+	{
+		for (IClasspathEntry entry : project.getRawClasspath())
+		{
+			if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY)
+			{
+				IPath entryPath = entry.getPath();
+				if (entryPath.segment(entryPath.segmentCount() - 1).equals(fileName)) return entry;
+			}
+		}
+		return null;
+	}
+
+	public static MessageConsole getOrCreateConsole(String name)
+	{
+		IConsoleManager manager = ConsolePlugin.getDefault().getConsoleManager();
+		for (IConsole console : manager.getConsoles())
+			if (name.equals(console.getName())) return (MessageConsole) console;
+		MessageConsole newConsole = new MessageConsole(name, null);
+		manager.addConsoles(new IConsole[]{newConsole});
+		return newConsole;
+	}
 }

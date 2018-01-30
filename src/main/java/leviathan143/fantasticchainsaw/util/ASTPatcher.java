@@ -10,19 +10,19 @@ import org.eclipse.text.edits.MalformedTreeException;
 
 public class ASTPatcher<T extends ASTNode> extends ASTVisitor
 {
-    private ASTRewrite rewriter;
+	private ASTRewrite rewriter;
 
-    public ASTPatcher(ASTRewrite rewriter)
-    {
-	this.rewriter = rewriter;
-    }
+	public ASTPatcher(ASTRewrite rewriter)
+	{
+		this.rewriter = rewriter;
+	}
 
-    protected final void patch(T node)
-	    throws CoreException, MalformedTreeException, IllegalArgumentException, BadLocationException
-    {
-	this.customPatch(node.getAST(), rewriter, node);
-    }
+	protected final void patch(T node)
+			throws CoreException, MalformedTreeException, IllegalArgumentException, BadLocationException
+	{
+		this.customPatch(node.getAST(), rewriter, node);
+	}
 
-    protected void customPatch(AST ast, ASTRewrite rewriter, T node)
-    {}
+	protected void customPatch(AST ast, ASTRewrite rewriter, T node)
+	{}
 }

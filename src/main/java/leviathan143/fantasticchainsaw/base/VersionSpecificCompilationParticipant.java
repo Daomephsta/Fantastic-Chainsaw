@@ -9,17 +9,17 @@ import leviathan143.fantasticchainsaw.Versioning.IVersionConstraint;
 
 public class VersionSpecificCompilationParticipant extends CompilationParticipant
 {
-    private final IVersionConstraint versionConstraint;
+	private final IVersionConstraint versionConstraint;
 
-    public VersionSpecificCompilationParticipant(String versionConstraintString)
-    {
-	this.versionConstraint = Versioning.createVersionConstraint(versionConstraintString);
-    }
+	public VersionSpecificCompilationParticipant(String versionConstraintString)
+	{
+		this.versionConstraint = Versioning.createVersionConstraint(versionConstraintString);
+	}
 
-    @Override
-    public boolean isActive(IJavaProject project)
-    {
-	return project.isOpen()
-		&& versionConstraint.acceptsVersion(MetadataHandler.getMetadata(project).getMCVersion());
-    }
+	@Override
+	public boolean isActive(IJavaProject project)
+	{
+		return project.isOpen()
+				&& versionConstraint.acceptsVersion(MetadataHandler.getMetadata(project).getMCVersion());
+	}
 }

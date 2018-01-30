@@ -10,12 +10,12 @@ import leviathan143.fantasticchainsaw.util.EclipseHelper;
 
 public class InvalidateMetadataHandler extends AbstractHandler
 {
-    @Override
-    public Object execute(ExecutionEvent arg0) throws ExecutionException
-    {
-	IJavaProject project = JavaCore.create(EclipseHelper.getFirstSelectedProject());
-	MetadataHandler.invalidateMetadata(project);
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException
+	{
+		IJavaProject project = JavaCore.create(EclipseHelper.getFirstSelectedProject());
+		MetadataHandler.invalidateMetadata(project);
 
-	return null;
-    }
+		return null;
+	}
 }

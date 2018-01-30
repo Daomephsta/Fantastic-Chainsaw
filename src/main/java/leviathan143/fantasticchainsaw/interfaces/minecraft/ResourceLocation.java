@@ -12,59 +12,60 @@ import com.google.gson.JsonSerializer;
 
 public class ResourceLocation
 {
-    private String domain;
-    private String path;
+	private String domain;
+	private String path;
 
-    public ResourceLocation(String location)
-    {
-	if(location.contains(":"))
+	public ResourceLocation(String location)
 	{
-	    String[] split = location.split(":");
-	    domain = split[0];
-	    path = split[1];
+		if (location.contains(":"))
+		{
+			String[] split = location.split(":");
+			domain = split[0];
+			path = split[1];
+		}
+		else
+		{
+			domain = "minecraft";
+			path = location;
+		}
 	}
-	else
+
+	public ResourceLocation(String domain, String path)
 	{
-	    domain = "minecraft";
-	    path = location;
-	}
-    }
-
-    public ResourceLocation(String domain, String path)
-    {
-	this.domain = domain;
-	this.path = path;
-    }
-
-    @Override
-    public String toString()
-    {
-	return domain + ":" + path;
-    }
-
-    public String getDomain()
-    {
-	return domain;
-    }
-
-    public String getPath()
-    {
-	return path;
-    }
-
-    public static class Serialiser implements JsonSerializer<ResourceLocation>, JsonDeserializer<ResourceLocation>
-    {
-	@Override
-	public ResourceLocation deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException
-	{
-	    return new ResourceLocation(element.getAsString());
+		this.domain = domain;
+		this.path = path;
 	}
 
 	@Override
-	public JsonElement serialize(ResourceLocation resLoc, Type type, JsonSerializationContext context)
+	public String toString()
 	{
-	    return new JsonPrimitive(resLoc.toString());
+		return domain + ":" + path;
 	}
 
-    }
+	public String getDomain()
+	{
+		return domain;
+	}
+
+	public String getPath()
+	{
+		return path;
+	}
+
+	public static class Serialiser implements JsonSerializer<ResourceLocation>, JsonDeserializer<ResourceLocation>
+	{
+		@Override
+		public ResourceLocation deserialize(JsonElement element, Type type, JsonDeserializationContext context)
+				throws JsonParseException
+		{
+			return new ResourceLocation(element.getAsString());
+		}
+
+		@Override
+		public JsonElement serialize(ResourceLocation resLoc, Type type, JsonSerializationContext context)
+		{
+			return new JsonPrimitive(resLoc.toString());
+		}
+
+	}
 }

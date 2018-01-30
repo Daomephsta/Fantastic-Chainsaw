@@ -12,83 +12,83 @@ import leviathan143.fantasticchainsaw.interfaces.minecraft.model.JSONModel;
 
 public class ModelParameterModel
 {
-    public static final IContentProvider CONTENT_PROVIDER = new ParameterModelContentProvider();
+	public static final IContentProvider CONTENT_PROVIDER = new ParameterModelContentProvider();
 
-    private final List<TextureVariable> textureVariables = Lists.newArrayList();
+	private final List<TextureVariable> textureVariables = Lists.newArrayList();
 
-    /*public void parse()
-    {
-	textureVariables.clear();
-	for(String textureVar : model.getTextureVariables()) textureVariables.add(new TextureVariable(textureVar, model.getTextureVariableValue(textureVar)));
-    }*/
-    
-    public void parse(JSONModel model)
-    {
-	textureVariables.clear();
-	for(String textureVar : model.getTextureVariables()) textureVariables.add(new TextureVariable(textureVar, model.getTextureVariableValue(textureVar)));
-    }
-    
-    public void applyParametersToModel(JSONModel model)
-    {
-	for(TextureVariable textureVar : textureVariables)
+	/* public void parse() { textureVariables.clear(); for(String textureVar :
+	 * model.getTextureVariables()) textureVariables.add(new
+	 * TextureVariable(textureVar, model.getTextureVariableValue(textureVar)));
+	 * } */
+
+	public void parse(JSONModel model)
 	{
-	    //Only set variables that have changed
-	    if(!textureVar.getValue().equals(textureVar.getDefaultValue()))
-		model.setTextureVariableValue(textureVar.getName(), textureVar.getValue());
-	}
-    }
-    
-    public List<TextureVariable> getTextureVariables()
-    {
-	return ImmutableList.copyOf(textureVariables);
-    }
-
-    public static class TextureVariable
-    {
-	private final String name;
-	private String value;
-	/**The initial value of this variable**/
-	private String defaultValue;
-
-	public TextureVariable(String name, String value)
-	{
-	    this.name = name;
-	    this.defaultValue = this.value = value;
+		textureVariables.clear();
+		for (String textureVar : model.getTextureVariables())
+			textureVariables.add(new TextureVariable(textureVar, model.getTextureVariableValue(textureVar)));
 	}
 
-	public String getName()
+	public void applyParametersToModel(JSONModel model)
 	{
-	    return name;
+		for (TextureVariable textureVar : textureVariables)
+		{
+			// Only set variables that have changed
+			if (!textureVar.getValue().equals(textureVar.getDefaultValue()))
+				model.setTextureVariableValue(textureVar.getName(), textureVar.getValue());
+		}
 	}
 
-	public String getValue()
+	public List<TextureVariable> getTextureVariables()
 	{
-	    return value;
+		return ImmutableList.copyOf(textureVariables);
 	}
 
-	public void setValue(String value)
+	public static class TextureVariable
 	{
-	    this.value = value;
-	}
-	
-	public boolean hasDefaultValue()
-	{
-	    return !defaultValue.isEmpty();
-	}
-	
-	public String getDefaultValue()
-	{
-	    return defaultValue;
-	}
-    }
+		private final String name;
+		private String value;
+		/** The initial value of this variable **/
+		private String defaultValue;
 
-    private static class ParameterModelContentProvider implements IStructuredContentProvider 
-    {	
-	@Override
-	public Object[] getElements(Object parent) 
-	{
-	    ModelParameterModel model = (ModelParameterModel) parent;
-	    return model.textureVariables.toArray();
+		public TextureVariable(String name, String value)
+		{
+			this.name = name;
+			this.defaultValue = this.value = value;
+		}
+
+		public String getName()
+		{
+			return name;
+		}
+
+		public String getValue()
+		{
+			return value;
+		}
+
+		public void setValue(String value)
+		{
+			this.value = value;
+		}
+
+		public boolean hasDefaultValue()
+		{
+			return !defaultValue.isEmpty();
+		}
+
+		public String getDefaultValue()
+		{
+			return defaultValue;
+		}
 	}
-    }
+
+	private static class ParameterModelContentProvider implements IStructuredContentProvider
+	{
+		@Override
+		public Object[] getElements(Object parent)
+		{
+			ModelParameterModel model = (ModelParameterModel) parent;
+			return model.textureVariables.toArray();
+		}
+	}
 }

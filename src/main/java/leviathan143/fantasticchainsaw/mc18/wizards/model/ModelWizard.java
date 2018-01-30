@@ -9,55 +9,55 @@ import org.eclipse.ui.wizards.newresource.BasicNewFileResourceWizard;
 import leviathan143.fantasticchainsaw.i18n.ModelWizardMessages;
 
 public class ModelWizard extends BasicNewFileResourceWizard
-{	
-    private ModelFileCreationPage newFilePage;
-    private ModelParameterPage modelParamPage;
-    
-    public ModelWizard()
-    {
-	
-    }
+{
+	private ModelFileCreationPage newFilePage;
+	private ModelParameterPage modelParamPage;
 
-    @Override
-    public void addPages() 
-    {
-	newFilePage = new ModelFileCreationPage(getSelection());
-	newFilePage.setFileExtension("json");
-	newFilePage.setTitle(ModelWizardMessages.titleP1);
-	newFilePage.setTitle(ModelWizardMessages.descriptionP1);
-	addPage(newFilePage);
-
-	modelParamPage = new ModelParameterPage();
-	modelParamPage.setTitle(ModelWizardMessages.titleP2);
-	modelParamPage.setTitle(ModelWizardMessages.descriptionP2);
-	newFilePage.addModelPathObserver(modelParamPage);
-	addPage(modelParamPage);
-    }
-
-    @Override
-    public void init(IWorkbench workbench, IStructuredSelection currentSelection)
-    {
-	super.init(workbench, currentSelection);
-    }
-
-    @Override
-    public boolean canFinish()
-    {
-	return newFilePage.isPageComplete() && modelParamPage.isPageComplete();
-    }
-
-    @Override
-    public boolean performFinish() 
-    {
-	try
+	public ModelWizard()
 	{
-	    IFile file = newFilePage.createNewFile();
-	    file.setContents(modelParamPage.getFinalModel(file.getLocation().toFile().toPath()), false, false, null);
+
 	}
-	catch (CoreException e)
+
+	@Override
+	public void addPages()
 	{
-	    e.printStackTrace();
+		newFilePage = new ModelFileCreationPage(getSelection());
+		newFilePage.setFileExtension("json");
+		newFilePage.setTitle(ModelWizardMessages.titleP1);
+		newFilePage.setTitle(ModelWizardMessages.descriptionP1);
+		addPage(newFilePage);
+
+		modelParamPage = new ModelParameterPage();
+		modelParamPage.setTitle(ModelWizardMessages.titleP2);
+		modelParamPage.setTitle(ModelWizardMessages.descriptionP2);
+		newFilePage.addModelPathObserver(modelParamPage);
+		addPage(modelParamPage);
 	}
-	return true;
-    }
+
+	@Override
+	public void init(IWorkbench workbench, IStructuredSelection currentSelection)
+	{
+		super.init(workbench, currentSelection);
+	}
+
+	@Override
+	public boolean canFinish()
+	{
+		return newFilePage.isPageComplete() && modelParamPage.isPageComplete();
+	}
+
+	@Override
+	public boolean performFinish()
+	{
+		try
+		{
+			IFile file = newFilePage.createNewFile();
+			file.setContents(modelParamPage.getFinalModel(file.getLocation().toFile().toPath()), false, false, null);
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
+		return true;
+	}
 }

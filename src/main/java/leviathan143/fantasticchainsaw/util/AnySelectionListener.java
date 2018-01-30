@@ -3,10 +3,10 @@ package leviathan143.fantasticchainsaw.util;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 
-public abstract class AnySelectionListener implements SelectionListener 
+public abstract class AnySelectionListener implements SelectionListener
 {
 	@Override
-	public void widgetDefaultSelected(SelectionEvent e) 
+	public void widgetDefaultSelected(SelectionEvent e)
 	{
 		handleSelection(e);
 	}
@@ -16,6 +16,6 @@ public abstract class AnySelectionListener implements SelectionListener
 	{
 		handleSelection(e);
 	}
-	
+
 	public abstract void handleSelection(SelectionEvent e);
 }

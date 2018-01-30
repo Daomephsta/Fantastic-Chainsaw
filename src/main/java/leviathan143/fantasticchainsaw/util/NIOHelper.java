@@ -10,20 +10,20 @@ import java.util.Map;
 
 public class NIOHelper
 {
-    public static FileSystem getOrCreateFileSystem(URI uri) throws IOException
-    {
-	return getOrCreateFileSystem(uri, Collections.emptyMap());
-    }
+	public static FileSystem getOrCreateFileSystem(URI uri) throws IOException
+	{
+		return getOrCreateFileSystem(uri, Collections.emptyMap());
+	}
 
-    public static FileSystem getOrCreateFileSystem(URI uri, Map<String, ?> env) throws IOException
-    {
-	try
+	public static FileSystem getOrCreateFileSystem(URI uri, Map<String, ?> env) throws IOException
 	{
-	    return FileSystems.getFileSystem(uri);
+		try
+		{
+			return FileSystems.getFileSystem(uri);
+		}
+		catch (FileSystemNotFoundException e)
+		{
+			return FileSystems.newFileSystem(uri, env);
+		}
 	}
-	catch (FileSystemNotFoundException e) 
-	{
-	    return FileSystems.newFileSystem(uri, env);
-	}
-    }
 }

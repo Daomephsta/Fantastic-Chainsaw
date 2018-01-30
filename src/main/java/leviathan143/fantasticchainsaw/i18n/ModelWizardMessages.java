@@ -2,14 +2,14 @@ package leviathan143.fantasticchainsaw.i18n;
 
 import org.eclipse.osgi.util.NLS;
 
-public class ModelWizardMessages extends NLS 
+public class ModelWizardMessages extends NLS
 {
 	private static final String BUNDLE_NAME = "leviathan143.fantasticchainsaw.i18n.modelWizard"; //$NON-NLS-1$
 	static
 	{
 		NLS.initializeMessages(BUNDLE_NAME, ModelWizardMessages.class);
 	}
-	
+
 	public static String selectTemplate;
 	public static String modelParameters;
 	public static String browse;

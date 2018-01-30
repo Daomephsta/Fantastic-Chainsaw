@@ -22,114 +22,114 @@ import leviathan143.fantasticchainsaw.i18n.LanguageFileEditorMessages;
 
 public class LanguageFileEditor extends MultiPageEditorPart implements IResourceChangeListener
 {
-    private int localisationEditorIdx;
-    private int textEditorIdx;
+	private int localisationEditorIdx;
+	private int textEditorIdx;
 
-    private TextEditor textEditor;
-    private LocalisationEditor localisationEditor;
+	private TextEditor textEditor;
+	private LocalisationEditor localisationEditor;
 
-    public LanguageFileEditor()
-    {
-	super();
-	ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
-    }
-
-    private void createTextEditorPage()
-    {
-	try
+	public LanguageFileEditor()
 	{
-	    textEditor = new TextEditor();
-	    textEditorIdx = addPage(textEditor, getEditorInput());
-	    setPageText(textEditorIdx, LanguageFileEditorMessages.textEditorTitle);
+		super();
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(this);
 	}
-	catch (PartInitException e)
+
+	private void createTextEditorPage()
 	{
-	    ErrorDialog.openError(getSite().getShell(), "Error creating nested text editor", null, e.getStatus());
-	}
-    }
-
-    private void createLocalisationEditorPage()
-    {
-	try
-	{
-	    localisationEditor = new LocalisationEditor(textEditor.getDocumentProvider());
-	    localisationEditorIdx = addPage(localisationEditor, getEditorInput());
-	    setPageText(localisationEditorIdx, LanguageFileEditorMessages.locEditorTitle);
-	}
-	catch (PartInitException e)
-	{
-	    ErrorDialog.openError(getSite().getShell(), "Error creating localisation editor", null, e.getStatus());
-	}
-    }
-
-    protected void createPages()
-    {
-	createTextEditorPage();
-	createLocalisationEditorPage();
-    }
-
-    @Override
-    protected void pageChange(int newPageIndex)
-    {
-	if (newPageIndex == localisationEditorIdx)
-	{
-	    localisationEditor.reparseModel();
-	}
-	super.pageChange(newPageIndex);
-    }
-
-    public void dispose()
-    {
-	ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
-	super.dispose();
-    }
-
-    public void doSave(IProgressMonitor monitor)
-    {
-	getEditor(textEditorIdx).doSave(monitor);
-    }
-
-    public void doSaveAs()
-    {}
-
-    public void gotoMarker(IMarker marker)
-    {
-	setActivePage(0);
-	IDE.gotoMarker(getEditor(0), marker);
-    }
-
-    public void init(IEditorSite site, IEditorInput editorInput) throws PartInitException
-    {
-	if (!(editorInput instanceof IFileEditorInput))
-	    throw new PartInitException("Invalid Input: Must be IFileEditorInput");
-	super.init(site, editorInput);
-    }
-
-    public boolean isSaveAsAllowed()
-    {
-	return false;
-    }
-
-    public void resourceChanged(final IResourceChangeEvent event)
-    {
-	if (event.getType() == IResourceChangeEvent.PRE_CLOSE)
-	{
-	    Display.getDefault().asyncExec(new Runnable()
+		try
 		{
-		    public void run()
-		    {
-			IWorkbenchPage[] pages = getSite().getWorkbenchWindow().getPages();
-			for (int i = 0; i < pages.length; i++)
-			{
-			    if (((FileEditorInput) textEditor.getEditorInput()).getFile().getProject()
-				    .equals(event.getResource()))
-			    {
-				IEditorPart editorPart = pages[i].findEditor(textEditor.getEditorInput());
-				pages[i].closeEditor(editorPart, true);
-			    }
-			}
-		    }
-		});
+			textEditor = new TextEditor();
+			textEditorIdx = addPage(textEditor, getEditorInput());
+			setPageText(textEditorIdx, LanguageFileEditorMessages.textEditorTitle);
+		}
+		catch (PartInitException e)
+		{
+			ErrorDialog.openError(getSite().getShell(), "Error creating nested text editor", null, e.getStatus());
+		}
 	}
-    }
+
+	private void createLocalisationEditorPage()
+	{
+		try
+		{
+			localisationEditor = new LocalisationEditor(textEditor.getDocumentProvider());
+			localisationEditorIdx = addPage(localisationEditor, getEditorInput());
+			setPageText(localisationEditorIdx, LanguageFileEditorMessages.locEditorTitle);
+		}
+		catch (PartInitException e)
+		{
+			ErrorDialog.openError(getSite().getShell(), "Error creating localisation editor", null, e.getStatus());
+		}
+	}
+
+	protected void createPages()
+	{
+		createTextEditorPage();
+		createLocalisationEditorPage();
+	}
+
+	@Override
+	protected void pageChange(int newPageIndex)
+	{
+		if (newPageIndex == localisationEditorIdx)
+		{
+			localisationEditor.reparseModel();
+		}
+		super.pageChange(newPageIndex);
+	}
+
+	public void dispose()
+	{
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
+		super.dispose();
+	}
+
+	public void doSave(IProgressMonitor monitor)
+	{
+		getEditor(textEditorIdx).doSave(monitor);
+	}
+
+	public void doSaveAs()
+	{}
+
+	public void gotoMarker(IMarker marker)
+	{
+		setActivePage(0);
+		IDE.gotoMarker(getEditor(0), marker);
+	}
+
+	public void init(IEditorSite site, IEditorInput editorInput) throws PartInitException
+	{
+		if (!(editorInput instanceof IFileEditorInput))
+			throw new PartInitException("Invalid Input: Must be IFileEditorInput");
+		super.init(site, editorInput);
+	}
+
+	public boolean isSaveAsAllowed()
+	{
+		return false;
+	}
+
+	public void resourceChanged(final IResourceChangeEvent event)
+	{
+		if (event.getType() == IResourceChangeEvent.PRE_CLOSE)
+		{
+			Display.getDefault().asyncExec(new Runnable()
+			{
+				public void run()
+				{
+					IWorkbenchPage[] pages = getSite().getWorkbenchWindow().getPages();
+					for (int i = 0; i < pages.length; i++)
+					{
+						if (((FileEditorInput) textEditor.getEditorInput()).getFile().getProject()
+								.equals(event.getResource()))
+						{
+							IEditorPart editorPart = pages[i].findEditor(textEditor.getEditorInput());
+							pages[i].closeEditor(editorPart, true);
+						}
+					}
+				}
+			});
+		}
+	}
 }

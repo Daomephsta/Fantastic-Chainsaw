@@ -15,57 +15,57 @@ import leviathan143.fantasticchainsaw.util.EclipseHelper;
 
 public abstract class ASTDependentTool extends AbstractHandler
 {
-    private final String taskDesc;
+	private final String taskDesc;
 
-    public ASTDependentTool(String taskDesc)
-    {
-	this.taskDesc = taskDesc;
-    }
-
-    @Override
-    public Object execute(ExecutionEvent arg0) throws ExecutionException
-    {
-	IJavaProject currentProject = null;
-	MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME).newMessageStream();
-
-	ASTParser parser = ASTParser.newParser(AST.JLS8);
-	try
+	public ASTDependentTool(String taskDesc)
 	{
-	    consoleStream.println("Starting task '" + taskDesc + "'");
-	    long startTime = System.currentTimeMillis();
-	    for (ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
-	    {
-		if (!comp.isStructureKnown())
-		    consoleStream.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
-		if (currentProject != comp.getJavaProject())
+		this.taskDesc = taskDesc;
+	}
+
+	@Override
+	public Object execute(ExecutionEvent arg0) throws ExecutionException
+	{
+		IJavaProject currentProject = null;
+		MessageConsoleStream consoleStream = EclipseHelper.getOrCreateConsole(FantasticPlugin.NAME).newMessageStream();
+
+		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		try
 		{
-		    consoleStream.println("Project has changed, refetching types.");
-		    currentProject = comp.getJavaProject();
-		    TypeFetcher.fetchTypes(currentProject);
+			consoleStream.println("Starting task '" + taskDesc + "'");
+			long startTime = System.currentTimeMillis();
+			for (ICompilationUnit comp : EclipseHelper.getCurrentSelectedCompilationUnits())
+			{
+				if (!comp.isStructureKnown())
+					consoleStream.println("Could not analyse " + comp.getElementName() + " because of syntax errors!");
+				if (currentProject != comp.getJavaProject())
+				{
+					consoleStream.println("Project has changed, refetching types.");
+					currentProject = comp.getJavaProject();
+					TypeFetcher.fetchTypes(currentProject);
+				}
+				setupASTParser(parser, currentProject, comp);
+				performTask((CompilationUnit) parser.createAST(null), comp);
+			}
+			consoleStream.println(
+					"Task '" + taskDesc + "' completed in " + (System.currentTimeMillis() - startTime) + " ms");
 		}
-		setupASTParser(parser, currentProject, comp);
-		performTask((CompilationUnit) parser.createAST(null), comp);
-	    }
-	    consoleStream.println(
-		    "Task '" + taskDesc + "' completed in " + (System.currentTimeMillis() - startTime) + " ms");
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
 	}
-	catch (Exception e)
+
+	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws Exception
 	{
-	    e.printStackTrace();
+
 	}
-	return null;
-    }
 
-    protected void performTask(CompilationUnit compUnit, ICompilationUnit comp) throws Exception
-    {
-
-    }
-
-    private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
-    {
-	parser.setProject(project);
-	parser.setSource(comp);
-	parser.setKind(ASTParser.K_COMPILATION_UNIT);
-	parser.setResolveBindings(true);
-    }
+	private void setupASTParser(ASTParser parser, IJavaProject project, ICompilationUnit comp)
+	{
+		parser.setProject(project);
+		parser.setSource(comp);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setResolveBindings(true);
+	}
 }
