@@ -54,14 +54,14 @@ public class GradleInterface
 			if (!BUILD_SCRIPT_TEMPLATE_FILE.exists())
 			{
 				InputStream buildScriptTemplate = GradleInterface.class.getClassLoader()
-						.getResourceAsStream("../resources/templates/default_build.gradle.template");
+						.getResourceAsStream("templates/default_build.gradle.template");
 				Files.copy(buildScriptTemplate, BUILD_SCRIPT_TEMPLATE_FILE.toPath());
 				buildScriptTemplate.close();
 			}
 			if (!PROPERTIES_TEMPLATE_FILE.exists())
 			{
 				InputStream gradlePropertiesTemplate = GradleInterface.class.getClassLoader()
-						.getResourceAsStream("../resources/templates/default_gradle.properties.template");
+						.getResourceAsStream("templates/default_gradle.properties.template");
 				Files.copy(gradlePropertiesTemplate, PROPERTIES_TEMPLATE_FILE.toPath());
 				gradlePropertiesTemplate.close();
 			}
