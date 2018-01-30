@@ -86,7 +86,7 @@ public class GradleInterface
 		unpacked = true;
 	}
 
-	public static ForgeModel getModel(IJavaProject project)
+	public static ForgeModel getForgeModel(IJavaProject project)
 	{
 		unpackFiles();
 		ProjectConnection connection = createConnection(project);

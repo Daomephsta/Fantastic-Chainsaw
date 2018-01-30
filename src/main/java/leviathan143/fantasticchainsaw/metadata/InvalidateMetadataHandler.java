@@ -1,4 +1,4 @@
-package leviathan143.fantasticchainsaw;
+package leviathan143.fantasticchainsaw.metadata;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;

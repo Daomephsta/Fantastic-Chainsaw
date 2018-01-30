@@ -1,28 +1,19 @@
-package leviathan143.fantasticchainsaw;
+package leviathan143.fantasticchainsaw.metadata;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.Files;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.console.MessageConsoleStream;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import com.google.common.cache.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import leviathan143.fantasticchainsaw.FantasticPlugin;
 import leviathan143.fantasticchainsaw.Versioning.Version;
 import leviathan143.fantasticchainsaw.gradle.ForgeModel;
 import leviathan143.fantasticchainsaw.interfaces.gradle.GradleInterface;
@@ -73,15 +64,19 @@ public class MetadataHandler
 							consoleStream.println(
 									"Fetching metadata for " + project.getElementName() + " from build.gradle");
 							// If it doesn't, load the metadata from the
-							// build.gradle, create the metadata
-							// file and write the metadata to the file
-							ForgeModel forgeModel = GradleInterface.getModel(project);
-							metadata = new ProjectMetadata(forgeModel.getMCVersion(), forgeModel.getForgeVersion(),
-									forgeModel.getMappings());
+							// build.gradle, create the metadata file and write
+							// the metadata to the file
+							if(project.getProject().hasNature(ForgeNature.NATURE_ID))
+							{
+								ForgeModel forgeModel = GradleInterface.getForgeModel(project);
+								metadata = new ForgeProjectMetadata(forgeModel.getMCVersion(), forgeModel.getForgeVersion(),
+										forgeModel.getMappings());
+							}
+							else metadata = new NonForgeProjectMetadata();
 							metadata.writeToFile(metadataFile);
 						}
 					}
-					catch (IOException e)
+					catch (IOException | CoreException e)
 					{
 						e.printStackTrace();
 					}
@@ -107,21 +102,10 @@ public class MetadataHandler
 		projectToMetadata.invalidate(project);
 	}
 
-	public static class ProjectMetadata
+	public static abstract class ProjectMetadata
 	{
 		private static final Gson METADATA_SERIALISER = new GsonBuilder()
 				.registerTypeAdapter(Version.class, new Version.Serialiser()).setPrettyPrinting().create();
-
-		private final Version mcVersion;
-		private final Version forgeVersion;
-		private final String mappingVersion;
-
-		public ProjectMetadata(String mcVersion, String forgeVersion, String mappingVersion)
-		{
-			this.mcVersion = new Version(mcVersion);
-			this.forgeVersion = new Version(forgeVersion);
-			this.mappingVersion = mappingVersion;
-		}
 
 		public static ProjectMetadata createFromFile(File file) throws IOException
 		{
@@ -129,6 +113,28 @@ public class MetadataHandler
 			{
 				return METADATA_SERIALISER.fromJson(reader, ProjectMetadata.class);
 			}
+		}
+
+		public void writeToFile(File file) throws IOException
+		{
+			try (Writer writer = new BufferedWriter(new FileWriter(file)))
+			{
+				writer.write(METADATA_SERIALISER.toJson(this));
+			}
+		}
+	}
+
+	public static class ForgeProjectMetadata extends ProjectMetadata
+	{
+		private final Version mcVersion;
+		private final Version forgeVersion;
+		private final String mappingVersion;
+
+		public ForgeProjectMetadata(String mcVersion, String forgeVersion, String mappingVersion)
+		{
+			this.mcVersion = new Version(mcVersion);
+			this.forgeVersion = new Version(forgeVersion);
+			this.mappingVersion = mappingVersion;
 		}
 
 		public Version getMCVersion()
@@ -145,13 +151,7 @@ public class MetadataHandler
 		{
 			return mappingVersion;
 		}
-
-		public void writeToFile(File file) throws IOException
-		{
-			try (Writer writer = new BufferedWriter(new FileWriter(file)))
-			{
-				writer.write(METADATA_SERIALISER.toJson(this));
-			}
-		}
 	}
+
+	public static class NonForgeProjectMetadata extends ProjectMetadata {}
 }

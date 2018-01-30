@@ -40,6 +40,7 @@ import leviathan143.fantasticchainsaw.generic.wizards.ForgeSetupPage.ForgeSetupD
 import leviathan143.fantasticchainsaw.generic.wizards.ForgeSetupPage.ModInfoData;
 import leviathan143.fantasticchainsaw.i18n.ForgeModWizardMessages;
 import leviathan143.fantasticchainsaw.interfaces.gradle.GradleInterface;
+import leviathan143.fantasticchainsaw.metadata.ForgeNature;
 import leviathan143.fantasticchainsaw.util.EclipseHelper;
 
 public class ForgeModWizard extends Wizard implements INewWizard
@@ -95,6 +96,17 @@ public class ForgeModWizard extends Wizard implements INewWizard
 			e.printStackTrace();
 		}
 		IJavaProject project = pageThree.getJavaProject();
+		
+		//Add Forge nature
+		try
+		{
+			ForgeNature.add(project.getProject());
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
+		
 		ForgeSetupData setupData = setupPage.getForgeSetupData();
 		ModInfoData modInfoData = setupPage.getModInfoData();
 

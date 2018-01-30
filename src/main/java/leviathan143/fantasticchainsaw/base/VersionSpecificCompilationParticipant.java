@@ -3,9 +3,11 @@ package leviathan143.fantasticchainsaw.base;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 
-import leviathan143.fantasticchainsaw.MetadataHandler;
 import leviathan143.fantasticchainsaw.Versioning;
 import leviathan143.fantasticchainsaw.Versioning.IVersionConstraint;
+import leviathan143.fantasticchainsaw.metadata.MetadataHandler;
+import leviathan143.fantasticchainsaw.metadata.MetadataHandler.ForgeProjectMetadata;
+import leviathan143.fantasticchainsaw.metadata.MetadataHandler.ProjectMetadata;
 
 public class VersionSpecificCompilationParticipant extends CompilationParticipant
 {
@@ -19,7 +21,8 @@ public class VersionSpecificCompilationParticipant extends CompilationParticipan
 	@Override
 	public boolean isActive(IJavaProject project)
 	{
-		return project.isOpen()
-				&& versionConstraint.acceptsVersion(MetadataHandler.getMetadata(project).getMCVersion());
+		if(!project.isOpen()) return false;
+		ProjectMetadata metadata = MetadataHandler.getMetadata(project);
+		return metadata instanceof ForgeProjectMetadata && versionConstraint.acceptsVersion(((ForgeProjectMetadata) metadata).getMCVersion());
 	}
 }

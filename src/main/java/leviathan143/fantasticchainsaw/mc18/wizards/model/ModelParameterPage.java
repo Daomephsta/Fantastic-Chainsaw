@@ -31,7 +31,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import leviathan143.fantasticchainsaw.MetadataHandler;
 import leviathan143.fantasticchainsaw.base.ArchiveFileDialog;
 import leviathan143.fantasticchainsaw.base.ObservableValue;
 import leviathan143.fantasticchainsaw.i18n.ModelWizardMessages;
@@ -40,6 +39,8 @@ import leviathan143.fantasticchainsaw.interfaces.minecraft.MCInterface;
 import leviathan143.fantasticchainsaw.interfaces.minecraft.MCResourceRepositoryAggregate;
 import leviathan143.fantasticchainsaw.interfaces.minecraft.model.JSONModel;
 import leviathan143.fantasticchainsaw.mc18.wizards.model.ModelParameterModel.TextureVariable;
+import leviathan143.fantasticchainsaw.metadata.MetadataHandler;
+import leviathan143.fantasticchainsaw.metadata.MetadataHandler.ForgeProjectMetadata;
 import leviathan143.fantasticchainsaw.util.AnySelectionListener;
 import leviathan143.fantasticchainsaw.util.EclipseHelper;
 import leviathan143.fantasticchainsaw.util.NIOHelper;
@@ -314,7 +315,7 @@ public class ModelParameterPage extends WizardPage implements Observer
 	{
 		try
 		{
-			String forgeVersionString = MetadataHandler.getMetadata(project).getForgeVersion().toString();
+			String forgeVersionString = ((ForgeProjectMetadata) MetadataHandler.getMetadata(project)).getForgeVersion().toString();
 			int buildNumber = Integer.valueOf(
 					forgeVersionString.substring(forgeVersionString.lastIndexOf('.') + 1, forgeVersionString.length()));
 			IPath jarPath = EclipseHelper.getClasspathFile(project,

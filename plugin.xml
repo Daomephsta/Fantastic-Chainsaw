@@ -16,12 +16,17 @@
 		<command
 			id="leviathan143.fantasticchainsaw.invalidateMetadata"
 			name="%commands.invalidateMetadata"
-			defaultHandler="leviathan143.fantasticchainsaw.InvalidateMetadataHandler">
+			defaultHandler="leviathan143.fantasticchainsaw.metadata.InvalidateMetadataHandler">
 		</command>
   <command
         defaultHandler="leviathan143.fantasticchainsaw.RefreshMCPAndForgeHandler"
         id="leviathan143.fantasticchainsaw.refreshMCPAndForge"
         name="%commands.refreshMCPAndForge">
+  </command>
+  <command
+        defaultHandler="leviathan143.fantasticchainsaw.AddForgeNature"
+        id="leviathan143.fantasticchainsaw.addForgeNature"
+        name="%commands.addForgeNature">
   </command>
 	</extension>
    	<!--Menu options-->
@@ -33,6 +38,9 @@
        		<command
              		commandId="leviathan143.fantasticchainsaw.refreshMCPAndForge">
        		</command>
+         <command
+               commandId="leviathan143.fantasticchainsaw.addForgeNature">
+         </command>
    		</menuContribution>
    		<menuContribution locationURI="menu:project?after=additions">
          <menu
@@ -101,5 +109,15 @@
     <startup
           class="leviathan143.fantasticchainsaw.Startup">
     </startup>
+ </extension>
+ <extension
+       id="mcforgemod"
+       name="MCForgeNature"
+       point="org.eclipse.core.resources.natures">
+    <runtime>
+       <run
+             class="leviathan143.fantasticchainsaw.metadata.ForgeNature">
+       </run>
+    </runtime>
  </extension>
 </plugin>
