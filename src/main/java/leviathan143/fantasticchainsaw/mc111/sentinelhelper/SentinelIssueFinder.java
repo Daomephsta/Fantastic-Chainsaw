@@ -69,8 +69,15 @@ public class SentinelIssueFinder extends ASTDependentTool
 				.get(IssueType.NULL_PARAMETER))
 		{
 			MarkerHelper.createSentinelIssueMarker(baseResource, String.format(
-					"Parameter %1$s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.",
+					"Parameter %s is of type ItemStack, which is non-nullable! Use ItemStack.EMPTY instead of null.",
 					nodeNodeNamePair.getValue()), compUnit.getLineNumber(nodeNodeNamePair.getKey().getStartPosition()));
+		}
+
+		for (ASTNode node : (List<ASTNode>) issues.get(IssueType.EMPTY_STACK_REF_CHECK))
+		{
+			MarkerHelper.createSentinelIssueMarker(baseResource,
+					"Use ItemStack#isEmpty() instead of checking for reference equality with ItemStack.EMPTY",
+					compUnit.getLineNumber(node.getStartPosition()));
 		}
 	}
 
@@ -95,6 +102,10 @@ public class SentinelIssueFinder extends ASTDependentTool
 		node.accept(nullParameterFinder);
 		issues.put(IssueType.NULL_PARAMETER, nullParameterFinder.matchingNodes);
 
+		EmptyStackReferenceCheckFinder emptyStackReferenceCheckFinder = new EmptyStackReferenceCheckFinder();
+		node.accept(emptyStackReferenceCheckFinder);
+		issues.put(IssueType.EMPTY_STACK_REF_CHECK, emptyStackReferenceCheckFinder.matchingNodes);
+
 		return issues;
 	}
 
@@ -106,7 +117,7 @@ public class SentinelIssueFinder extends ASTDependentTool
 
 	public static enum IssueType
 	{
-		NULL_CHECK, NULL_ASSIGNMENT, NULL_RETURN, NULL_PARAMETER;
+		NULL_CHECK, NULL_ASSIGNMENT, NULL_RETURN, NULL_PARAMETER, EMPTY_STACK_REF_CHECK;
 	}
 
 	public static class ItemStackNullCheckFinder extends ASTVisitor
@@ -233,6 +244,37 @@ public class SentinelIssueFinder extends ASTDependentTool
 			catch (JavaModelException e)
 			{
 				e.printStackTrace();
+			}
+			return false;
+		}
+	}
+
+	public static class EmptyStackReferenceCheckFinder extends ASTVisitor
+	{
+		List<ASTNode> matchingNodes = new ArrayList<ASTNode>();
+
+		@Override
+		public boolean visit(InfixExpression node)
+		{
+			if (node.getOperator() == Operator.EQUALS || node.getOperator() == Operator.NOT_EQUALS)
+			{
+				Expression left = node.getLeftOperand();
+				Expression right = node.getRightOperand();
+				if (isEmptyStack(left) && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE))
+					matchingNodes.add(right);
+				else if (isEmptyStack(right) && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE))
+					matchingNodes.add(left);
+			}
+			return node.getOperator() == Operator.CONDITIONAL_AND || node.getOperator() == Operator.CONDITIONAL_OR;
+		}
+
+		private boolean isEmptyStack(Expression expression)
+		{
+			if (expression instanceof Name)
+			{
+				Name name = (Name) expression;
+				return name.getFullyQualifiedName().equals(TypeHelper.ITEMSTACK_NAME + ".EMPTY")
+						|| name.getFullyQualifiedName().equals("ItemStack.EMPTY");
 			}
 			return false;
 		}

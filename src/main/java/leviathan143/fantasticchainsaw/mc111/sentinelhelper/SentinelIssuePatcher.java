@@ -29,6 +29,7 @@ public class SentinelIssuePatcher extends ASTRewritingTool
 	protected void performTask(CompilationUnit compUnit, ICompilationUnit comp)
 			throws CoreException, MalformedTreeException, BadLocationException
 	{
+		System.out.println("HULLO");
 		super.performTask(compUnit, comp);
 		ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(MarkerHelper.SENTINEL_ISSUE, true,
 				IResource.DEPTH_INFINITE);
@@ -37,6 +38,7 @@ public class SentinelIssuePatcher extends ASTRewritingTool
 	@Override
 	protected void rewriteAST(CompilationUnit compUnit, ICompilationUnit comp, ASTRewrite rewriter)
 	{
+		System.out.println("REWRITING");
 		ItemStackNullCheckPatcher stackNullCheckPatcher = new ItemStackNullCheckPatcher(rewriter);
 		compUnit.accept(stackNullCheckPatcher);
 
@@ -48,6 +50,8 @@ public class SentinelIssuePatcher extends ASTRewritingTool
 
 		ItemStackNullParameterPatcher nullParameterPatcher = new ItemStackNullParameterPatcher(rewriter);
 		compUnit.accept(nullParameterPatcher);
+		
+		compUnit.accept(new EmptyStackReferenceCheckPatcher(rewriter));
 
 		if (!comp.getImport(TypeHelper.ITEMSTACK_NAME).exists()
 				&& (nullAssignmentPatcher.workDone || nullParameterPatcher.workDone || nullReturnPatcher.workDone))
@@ -231,6 +235,76 @@ public class SentinelIssuePatcher extends ASTRewritingTool
 						replaceNullWithEmptyStack(node.getAST(), rewriter, arg);
 					}
 				}
+			}
+			return false;
+		}
+	}
+	
+	public static class EmptyStackReferenceCheckPatcher extends ASTVisitor
+	{
+		private Expression itemstackExpression;
+		private ASTRewrite rewriter;
+
+		public EmptyStackReferenceCheckPatcher(ASTRewrite rewriter)
+		{
+			this.rewriter = rewriter;
+		}
+
+		@Override
+		public boolean visit(InfixExpression node)
+		{
+			if (node.getOperator() == InfixExpression.Operator.EQUALS
+					|| node.getOperator() == InfixExpression.Operator.NOT_EQUALS)
+			{
+				Expression left = node.getLeftOperand();
+				Expression right = node.getRightOperand();
+				try
+				{
+					if (isEmptyStack(left) && TypeHelper.isOfType(right, TypeFetcher.ITEMSTACK_TYPE))
+					{
+						itemstackExpression = right;
+						patch(node.getAST(), rewriter, node);
+					}
+					else if (isEmptyStack(right) && TypeHelper.isOfType(left, TypeFetcher.ITEMSTACK_TYPE))
+					{
+						itemstackExpression = left;
+						patch(node.getAST(), rewriter, node);
+					}
+				}
+				catch (MalformedTreeException | IllegalArgumentException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			return node.getOperator() == InfixExpression.Operator.CONDITIONAL_AND
+					|| node.getOperator() == InfixExpression.Operator.CONDITIONAL_OR;
+		}
+
+		protected void patch(AST ast, ASTRewrite rewriter, InfixExpression node)
+		{
+			MethodInvocation isEmptyInvocation = ast.newMethodInvocation();
+			isEmptyInvocation.setName(ast.newSimpleName("isEmpty"));
+			isEmptyInvocation.setExpression((Expression) rewriter.createMoveTarget(itemstackExpression));
+			if (node.getOperator() == InfixExpression.Operator.NOT_EQUALS)
+			{
+				PrefixExpression prefix = ast.newPrefixExpression();
+				prefix.setOperand(isEmptyInvocation);
+				prefix.setOperator(PrefixExpression.Operator.NOT);
+				rewriter.replace(node, prefix, null);
+			}
+			else
+			{
+				rewriter.replace(node, isEmptyInvocation, null);
+			}
+		}
+
+		private boolean isEmptyStack(Expression expression)
+		{
+			if (expression instanceof Name)
+			{
+				Name name = (Name) expression;
+				return name.getFullyQualifiedName().equals(TypeHelper.ITEMSTACK_NAME + ".EMPTY")
+						|| name.getFullyQualifiedName().equals("ItemStack.EMPTY");
 			}
 			return false;
 		}
