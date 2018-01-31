@@ -8,11 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne;
@@ -24,16 +20,7 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.gradle.tooling.ProjectConnection;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 
 import leviathan143.fantasticchainsaw.FantasticPlugin;
 import leviathan143.fantasticchainsaw.generic.wizards.ForgeSetupPage.ForgeSetupData;
@@ -54,16 +41,16 @@ public class ForgeModWizard extends Wizard implements INewWizard
 
 	public ForgeModWizard()
 	{
+		setWindowTitle(ForgeModWizardMessages.windowTitle);
 		pageOne.setTitle(ForgeModWizardMessages.page1Title);
 		setupPage.setTitle(ForgeModWizardMessages.page3Title);
 		addPage(pageOne);
 		addPage(setupPage);
 		addPage(pageThree);
 	}
-
+	
 	@Override
-	public void init(IWorkbench workbench, IStructuredSelection selection)
-	{}
+	public void init(IWorkbench workbench, IStructuredSelection selection) {}
 
 	@Override
 	public boolean canFinish()

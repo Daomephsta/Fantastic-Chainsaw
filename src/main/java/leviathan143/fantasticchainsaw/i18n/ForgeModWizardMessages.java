@@ -11,8 +11,10 @@ public class ForgeModWizardMessages extends NLS
 		NLS.initializeMessages(BUNDLE_NAME, ForgeModWizardMessages.class);
 	}
 
+	public static String windowTitle;
+	
 	public static String page1Title;
-
+	
 	public static String page3Title;
 	public static String mcVersionLabelText;
 	public static String forgeVersionLabelText;
