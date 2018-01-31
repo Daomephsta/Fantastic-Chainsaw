@@ -13,13 +13,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.ISelection;
@@ -77,6 +71,15 @@ public class EclipseHelper
 					{
 						for (IPackageFragment fragment : ((IJavaProject) obj).getPackageFragments())
 							Collections.addAll(compUnits, fragment.getCompilationUnits());
+					}
+					else if (obj instanceof IProject)
+					{
+						IJavaProject jProj = JavaCore.create((IProject) obj);
+						if(jProj != null)
+						{
+							for (IPackageFragment fragment : jProj.getPackageFragments())
+								Collections.addAll(compUnits, fragment.getCompilationUnits());
+						}
 					}
 				}
 			}
